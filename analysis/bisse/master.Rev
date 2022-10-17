@@ -1,0 +1,29 @@
+##########################################
+##   Binary State Speciation-Extinction ##
+##  Testing SSE models with fossil data ##
+##               Chapter 1              ##
+##     Bruno do Rosario Petrucci        ##
+##########################################
+
+###
+# get tensorPhylo
+loadPlugin("TensorPhylo", "/Users/petrucci/Documents/research/programs/tensorPhylo/build/installer/lib")
+
+# psi reference
+psiRefs <- v("1_low_psi", "2_med_psi", "3_high_psi")
+psiRef <- psiRefs[psiComb]
+
+# parameter reference
+parRefs <- v("1_base", "2_high_lambda1", "3_high_mu0", "4_low_q10")
+parRef <- parRefs[parComb]
+
+# model reference
+modelRefs <- v("fbd", "bisse", "both")
+modelRef <- modelRefs[modelComb]
+
+# trait reference
+traitRefs <- v("real", "low", "mid", "high")
+traitRef <- traitRefs[traitComb]
+
+# source relevant script
+source("analysis/bisse/" + modelRef + ".Rev")
