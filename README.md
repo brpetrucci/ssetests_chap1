@@ -1,2 +1,7 @@
-# ssetests_chap1
-Tests of state-dependent speciation and extinction (SSE) models intended to be the first chapter of my PhD dissertation.
+This repo holds tests of SSE models with fossil tips and sampled ancestor trees. Need to improve this README in the future.
+
+## BiSSE
+
+## HiSSE
+
+## QuaSSE
