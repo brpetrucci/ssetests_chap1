@@ -1,9 +1,6 @@
 ###
 # read data
 
-# data directory
-data_dir <- "simulation/replicates/" + psiRef + "/" + parRef + "/"
-
 # get the tree
 tree <- readTrees(file = data_dir + "trees/ultra/tree_ultra_" + rep + ".nex")[1]
 

@@ -25,5 +25,8 @@ modelRef <- modelRefs[modelComb]
 traitRefs <- v("real", "low", "mid", "high")
 traitRef <- traitRefs[traitComb]
 
+# data directory
+data_dir <- "simulation/bisse/replicates/" + psiRef + "/" + parRef + "/"
+
 # source relevant script
 source("analysis/bisse/" + modelRef + ".Rev")
