@@ -7,7 +7,14 @@
 
 ###
 # get tensorPhylo
-loadPlugin("TensorPhylo", "/Users/petrucci/Documents/research/programs/tensorPhylo/build/installer/lib")
+loadPlugin("TensorPhylo", "/work/LAS/phylo-lab/petrucci/tensorphylo/build/installer/lib")
+
+# if model is 1, trait is not necessary, same for 2 and psi
+if (modelComb == 1) {
+  traitComb <- 1
+} else if (modelComb == 2) {
+  psiComb <- 1
+}
 
 # psi reference
 psiRefs <- v("1_low_psi", "2_med_psi", "3_high_psi")

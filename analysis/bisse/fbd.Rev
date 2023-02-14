@@ -52,7 +52,7 @@ mymodel = model(timetree)
 # set up monitors and run analysis
 
 # output file names
-out_name <- "analysis/output/" + psiRef + "/" + parRef + "/" + modelRef + "/" + "/rep_" + rep + "/"
+out_name <- "output/bisse/" + psiRef + "/" + parRef + "/" + modelRef + "/" + "/rep_" + rep + "/"
 
 # append monitor to log
 monitors.append(mnModel(filename = out_name + "bisse.log", printgen = 100))
