@@ -75,7 +75,7 @@ rho <- Probability(1)
 root_age <- tree.rootAge()
 
 # set the bisse fbd tree
-timetree ~ dnGLHBDSP(rootAge = root_age, lambda = lambda, mu = mu, eta = Q, pi = pi, phi = phi, taxa = taxa, rho = rho, nStates = num_states, nProc = 4)
+timetree ~ dnGLHBDSP(rootAge = root_age, lambda = lambda, mu = mu, eta = Q, pi = pi, phi = phi, taxa = taxa, rho = rho, nStates = num_states)
 
 # clamp it to the data
 timetree.clamp(tree)
