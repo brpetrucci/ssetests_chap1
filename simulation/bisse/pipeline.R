@@ -36,7 +36,7 @@ load_all()
 # mu: mu0 = mu1 = 0.03; mu0 = 0.06
 # lambda: lambda0 = lambda1 = 0.1; lambda1 = 0.2
 # psi: 0.01, 0.05, 0.1
-# N: 500
+# N: 100
 
 ###
 # set up the baseline simulation settings
@@ -45,7 +45,7 @@ load_all()
 n0 <- 1
 
 # expected number of extant species
-N <- 500
+N <- 100
 
 # base (null model) rates
 # from BiSSE paper and Beauliau & O'Meara 2022
@@ -533,7 +533,7 @@ simulate <- function(seeds, nReps, comb, key, simDir, N, psi) {
 
 ###
 # number of reps to run each combination of parameters
-nReps <- 500
+nReps <- 100
 
 # psi ref
 psiRefs <- c("1_low_psi", "2_med_psi", "3_high_psi")
@@ -544,8 +544,8 @@ psiVar <- c(0.01, 0.05, 0.1)
 # for each psi
 for (i in 1:length(psiVar)) {
   # simulations directory
-  simDir <- paste0("/Users/petrucci/Documents/research/ssefbd_evol22/power/", 
-                   "simulation/replicates/", psiRefs[i], "/")
+  simDir <- paste0("/Users/petrucci/Documents/research/ssetests_chap1/", 
+                   "simulation/bisse/replicates/", psiRefs[i], "/")
   smart.dir.create(simDir)
   
   # run simulations for each combination of parameters
