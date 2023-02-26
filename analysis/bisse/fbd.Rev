@@ -40,7 +40,7 @@ rho <- Probability(1)
 eta <- 1.0 
 
 # set the bisse fbd tree
-timetree ~ dnGLHBDSP(rootAge = root_age, lambda = v(lambda, lambda), mu = v(mu, mu), phi = v(phi, phi), eta = eta, pi = Simplex(1, 1), taxa = taxa, rho = rho, nStates = 2, nProc = 4)
+timetree ~ dnGLHBDSP(rootAge = root_age, lambda = v(lambda, lambda), mu = v(mu, mu), phi = v(phi, phi), eta = eta, pi = Simplex(1, 1), taxa = taxa, rho = rho, nStates = 2)
 
 # clamp it to the data
 timetree.clamp(tree)

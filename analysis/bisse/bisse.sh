@@ -10,28 +10,20 @@ export PATH=$PATH:/work/LAS/phylo-lab/petrucci/revbayes/projects/cmake
 # go to the correct directory
 cd /work/LAS/phylo-lab/petrucci/ssetests_chap1/
 
-for i in {1..250}
-do
-  # get the rep value
-  rep=$(($(($SLURM_ARRAY_TASK_ID-1))*100+$i))
+# get the rep value
+rep=$SLURM_ARRAY_TASK_ID
 
-  # create a file to hold the rep
-  touch aux/aux_${1}_$rep.Rev
+# create a file to hold the rep
+touch aux/aux_${1}_$rep.Rev
 
-  # echo the definitions on it
-  printf "rep <- " >> aux/aux_${1}_$rep.Rev
-  echo $rep >> aux/aux_${1}_$rep.Rev
+# echo the definitions on it
+printf "rep <- " >> aux/aux_${1}_$rep.Rev
+echo $rep >> aux/aux_${1}_$rep.Rev
 
-  # source it, the parameter combination, and the actual script
-  rb aux/aux_${1}_$rep.Rev analysis/bisse/refs/refs_${1}.Rev analysis/bisse/master.Rev &
-done
+# source it, the parameter combination, and the actual script
+rb aux/aux_${1}_$rep.Rev analysis/bisse/refs/refs_${1}.Rev analysis/bisse/master.Rev &
 
-wait $(jobs -p)
+rep=$SLURM_ARRAY_TASK_ID
 
-for i in {1..250}
-do
-  rep=$(($(($SLURM_ARRAY_TASK_ID-1))*100+$i))
-
-  # remove file
-  rm aux/aux_${1}_$rep.Rev
-done
+# remove file
+rm aux/aux_${1}_$rep.Rev
