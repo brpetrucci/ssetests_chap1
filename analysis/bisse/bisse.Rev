@@ -2,7 +2,7 @@
 # read data
 
 # get the tree
-tree <- readTrees(file = data_dir + "trees/ultra/tree_ultra_" + rep + ".nex")[1]
+tree <- readTrees(file = data_dir + "trees/ultrametric/tree_ultra_" + rep + ".nex")[1]
 
 # get root age
 root_age <- tree.rootAge()
@@ -12,9 +12,9 @@ taxa <- tree.taxa()
 
 # check whether we want the real trait or a neutral one
 if (traitRef == "real") {
-  trait_file <- data_dir + "traits/ultra/real_ultra_" + rep + ".nex"
+  trait_file <- data_dir + "traits/ultrametric/real_ultra_" + rep + ".nex"
 } else {
-  trait_file <- data_dir + "traits/ultra/neutral/" + traitRef + "/neutral_" + traitRef + "_ultra_" + rep + ".nex"
+  trait_file <- data_dir + "traits/ultrametric/neutral/" + traitRef + "/neutral_" + traitRef + "_ultra_" + rep + ".nex"
 }
 print(trait_file)
 # and get character data
