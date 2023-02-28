@@ -36,7 +36,7 @@ load_all()
 # mu: mujk = mu0A = 0.03; mu0B = 0.06
 # lambda: lambdajk = lambda0A = 0.1; lambda1B = 0.2
 # psi: 0.01, 0.05, 0.1
-# N: 500
+# N: 100
 
 ###
 # set up the baseline simulation settings
@@ -45,7 +45,7 @@ load_all()
 n0 <- 1
 
 # expected number of extant species
-N <- 500
+N <- 100
 
 # base (null model) rates
 # equivalent to BiSSE pipeline
@@ -115,10 +115,11 @@ base <- key[1, ]
 refs <- c("high_lambda1", "high_mu0", "low_q10", "high_lambda1B", "low_mu0B")
 
 # the corresponding column numbers to change in the base
-change <- c(c(3, 5), c(6, 8), c(11, 21), 5, 8)
+change <- list(c(3, 5), c(6, 8), c(11, 21), 5, 8)
 
 # the new values
-new <- c(c(lambda1Var, lambda3Var),  mu0Var, q10Var)
+new <- list(c(lambda1Var, lambda3Var),  c(mu0Var, mu2Var), c(q10Var, q32Var),
+         lambda3Var2, mu3Var2)
 
 # copy the baseline a bunch of times to fill the key
 key <- rbind(key, key[rep(1, length(change)), ])
@@ -127,7 +128,7 @@ rownames(key) <- 1:nrow(key)
 # populate it with the values in aux
 for (i in 2:nrow(key)) {
   key$ref[i] <- refs[i - 1]
-  key[i, change[i - 1]] <- new[i - 1]
+  key[i, change[[i - 1]]] <- new[[i - 1]]
 }
 
 ###
@@ -164,22 +165,29 @@ collapseFossils <- function(tree) {
 }
 
 # create simulation function for one rep
-simulate_rep <- function(lambda0, lambda1, mu0, mu1, q01, q10, N, psi) {
+simulate_rep <- function(lambda0, lambda1, lambda2, lambda3,
+                         mu0, mu1, mu2, mu3, 
+                         q01, q10, q02, q20, q03, q30,
+                         q12, q21, q13, q31, q23, q32, N, psi) {
   ### set up parameters
   # initial number of species
   n0 <- 1
   
   # speciation
-  lambda <- c(lambda0, lambda1)
+  lambda <- c(lambda0, lambda1, lambda2, lambda3)
   
   # extinction
-  mu <- c(mu0, mu1)
+  mu <- c(mu0, mu1, mu2, mu3)
   
   # transition rate matrix
-  Q <- list(matrix(c(0, q10, q01, 0), 2, 2),
-            matrix(c(0, 0.01, 0.01, 0), 2, 2),
-            matrix(c(0, 0.1, 0.1, 0), 2, 2),
-            matrix(c(0, 1, 1, 0), 2, 2))
+  Q <- list(matrix(c(0, q10, q20, q30, q01, 0, q21, q31, 
+                     q02, q12, 0, q32, q03, q13, q23, 0), 4, 4),
+            matrix(c(0, 0.01, 0.01, 0, 0.01, 0, 0, 0.01, 
+                     0.01, 0, 0, 0.01, 0, 0.01, 0.01, 0), 4, 4),
+            matrix(c(0, 0.1, 0.1, 0, 0.1, 0, 0, 0.1, 
+                     0.1, 0, 0, 0.1, 0, 0.1, 0.1, 0), 4, 4),
+            matrix(c(0, 1, 1, 0, 1, 0, 0, 1, 
+                     1, 0, 0, 1, 0, 1, 1, 0), 4, 4))
   
   # initialize check
   bounds <- FALSE
@@ -191,11 +199,13 @@ simulate_rep <- function(lambda0, lambda1, mu0, mu1, q01, q10, N, psi) {
   
   while (!bounds) {
     # run simulation
-    sim <- bd.sim.musse(n0, lambda, mu, "number", N = N, nTraits= 4, Q = Q)
+    sim <- bd.sim.musse(n0, lambda, mu, "number", N = N, 
+                        nTraits = 4, nStates = 4, Q = Q)
     
     # run again until we have some extinct species
     while (sum(!sim$SIM$EXTANT) == 0) {
-      sim <- bd.sim.musse(n0, lambda, mu, "number", N = N, nTraits = 4, Q = Q)
+      sim <- bd.sim.musse(n0, lambda, mu, "number", N = N, 
+                          nTraits = 4, nStates = 4, Q = Q)
       
     }
     
@@ -284,18 +294,30 @@ simulate_rep <- function(lambda0, lambda1, mu0, mu1, q01, q10, N, psi) {
     
     # and make the trait lists
     # for the ultrametric tree
+    # and make traits hidden
     treeUltraReal <- 
       as.numeric(unlist(lapply(ultraTaxa, function(x)
         tail(real[[x]]$value, 1))))
+    treeUltraReal[treeUltraReal == 2] <- 0
+    treeUltraReal[treeUltraReal == 3] <- 1
+    
     treeUltraNeutralLow <- 
       as.numeric(unlist(lapply(ultraTaxa, function(x)
         tail(neutral_low[[x]]$value, 1))))
+    treeUltraNeutralLow[treeUltraNeutralLow == 2] <- 0
+    treeUltraNeutralLow[treeUltraNeutralLow == 3] <- 1
+    
     treeUltraNeutralMid <- 
       as.numeric(unlist(lapply(ultraTaxa, function(x)
         tail(neutral_mid[[x]]$value, 1))))
+    treeUltraNeutralMid[treeUltraNeutralMid == 2] <- 0
+    treeUltraNeutralMid[treeUltraNeutralMid == 3] <- 1
+    
     treeUltraNeutralHigh <- 
       as.numeric(unlist(lapply(ultraTaxa, function(x)
         tail(neutral_high[[x]]$value, 1))))
+    treeUltraNeutralHigh[treeUltraNeutralHigh == 2] <- 0
+    treeUltraNeutralHigh[treeUltraNeutralHigh == 3] <- 1
     
     names(treeUltraReal) <- names(treeUltraNeutralLow) <- 
       names(treeUltraNeutralMid) <- names(treeUltraNeutralHigh) <- 
@@ -316,12 +338,23 @@ simulate_rep <- function(lambda0, lambda1, mu0, mu1, q01, q10, N, psi) {
     # and the fbd tree
     treeFBDReal <- 
       as.numeric(unlist(lapply(fbdTaxa, function(x) traitList(real, x))))
+    treeFBDReal[treeFBDReal == 2] <- 0
+    treeFBDReal[treeFBDReal == 3] <- 1
+    
     treeFBDNeutralLow <- 
       as.numeric(unlist(lapply(fbdTaxa, function(x) traitList(neutral_low, x))))
+    treeFBDNeutralLow[treeFBDNeutralLow == 2] <- 0
+    treeFBDNeutralLow[treeFBDNeutralLow == 3] <- 1
+    
     treeFBDNeutralMid <- 
       as.numeric(unlist(lapply(fbdTaxa, function(x) traitList(neutral_mid, x))))
+    treeFBDNeutralMid[treeFBDNeutralMid == 2] <- 0
+    treeFBDNeutralMid[treeFBDNeutralMid == 3] <- 1
+    
     treeFBDNeutralHigh <- 
       as.numeric(unlist(lapply(fbdTaxa, function(x) traitList(neutral_high, x))))
+    treeFBDNeutralHigh[treeFBDNeutralHigh == 2] <- 0
+    treeFBDNeutralHigh[treeFBDNeutralHigh == 3] <- 1
     
     names(treeFBDReal) <- names(treeFBDNeutralLow) <- 
       names(treeFBDNeutralMid) <- names(treeFBDNeutralHigh) <- 
@@ -520,14 +553,28 @@ simulate <- function(seeds, nReps, comb, key, simDir, N, psi) {
   # speciation rates
   lambda0 <- key$lambda0[comb]
   lambda1 <- key$lambda1[comb]
+  lambda2 <- key$lambda2[comb]
+  lambda3 <- key$lambda3[comb]
   
   # extinction rates
   mu0 <- key$mu0[comb]
   mu1 <- key$mu1[comb]
+  mu2 <- key$mu2[comb]
+  mu3 <- key$mu3[comb]
   
   # transition rates
   q01 <- key$q01[comb]
   q10 <- key$q10[comb]
+  q02 <- key$q02[comb]
+  q20 <- key$q20[comb]
+  q03 <- key$q03[comb]
+  q30 <- key$q30[comb]
+  q12 <- key$q12[comb]
+  q21 <- key$q21[comb]
+  q13 <- key$q13[comb]
+  q31 <- key$q31[comb]
+  q23 <- key$q23[comb]
+  q32 <- key$q32[comb]
   
   # fossil sampling rates
   psi <- psi
@@ -545,7 +592,10 @@ simulate <- function(seeds, nReps, comb, key, simDir, N, psi) {
     print(paste0("psi: ", psi, " comb: ", ref, " rep: ", x, 
                  " seed: ", seeds[x]))
     set.seed(seeds[x])
-    simulate_rep(lambda0, lambda1, mu0, mu1, q01, q10, N, psi)
+    simulate_rep(lambda0, lambda1, lambda2, lambda3, 
+                 mu0, mu1, mu2, mu3,
+                 q01, q10, q02, q20, q03, q30,
+                 q12, q21, q13, q31, q23, q32, N, psi)
   })
   
   # save them
@@ -554,7 +604,7 @@ simulate <- function(seeds, nReps, comb, key, simDir, N, psi) {
 
 ###
 # number of reps to run each combination of parameters
-nReps <- 500
+nReps <- 100
 
 # psi ref
 psiRefs <- c("1_low_psi", "2_med_psi", "3_high_psi")
@@ -565,8 +615,8 @@ psiVar <- c(0.01, 0.05, 0.1)
 # for each psi
 for (i in 1:length(psiVar)) {
   # simulations directory
-  simDir <- paste0("/Users/petrucci/Documents/research/ssefbd_evol22/power/", 
-                   "simulation/replicates/", psiRefs[i], "/")
+  simDir <- paste0("/Users/petrucci/Documents/research/ssetests_chap1/", 
+                   "simulation/hisse/replicates/", psiRefs[i], "/")
   smart.dir.create(simDir)
   
   # run simulations for each combination of parameters
