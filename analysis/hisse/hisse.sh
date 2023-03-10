@@ -21,12 +21,7 @@ printf "rep <- " >> aux/aux_${1}_$rep.Rev
 echo $rep >> aux/aux_${1}_$rep.Rev
 
 # source it, the parameter combination, and the actual script
-timeout 24h rb aux/aux_${1}_$rep.Rev analysis/bisse/refs/refs_${1}.Rev analysis/bisse/master.Rev
-
-# timeout and requeue if it takes more than 24h, MCMC is probably stuck
-if [[ $? == 124 ]]; then 
-  scontrol requeue ${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}
-fi
+rb aux/aux_${1}_$rep.Rev analysis/bisse/refs/refs_${1}.Rev analysis/bisse/master.Rev
 
 # remove file
 rm aux/aux_${1}_$rep.Rev

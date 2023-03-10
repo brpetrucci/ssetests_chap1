@@ -25,15 +25,13 @@ lambda ~ dnLoguniform(1E-6, 1E2)
 mu ~ dnLoguniform(1E-6, 1E2)
 phi ~ dnLoguniform(1E-6, 1E2)
 
-# set initial values to make sure it doesn't get stuck on super high ones
-lambda.setValue(1)
-mu.setValue(1)
-phi.setValue(1)
-
 # append moves 
-moves.append(mvScale(lambda, weight = 3.0))
-moves.append(mvScale(mu, weight = 3.0))
-moves.append(mvScale(phi, weight = 3.0))
+moves.append(mvScale(lambda, lambda = 0.2, tune = true, weight = 3.0))
+moves.append(mvScale(mu, lambda = 0.2, tune = true, weight = 3.0))
+moves.append(mvScale(phi, lambda = 0.2, tune = true, weight = 3.0))
+
+# to keep track of diversification rate
+div := lambda - mu
 
 # sampling at present
 rho <- Probability(1)
@@ -54,10 +52,10 @@ mymodel = model(timetree)
 # set up monitors and run analysis
 
 # output file names
-out_name <- "output/bisse/" + psiRef + "/" + parRef + "/" + modelRef + "/" + "/rep_" + rep + "/"
+out_name <- "output/hisse/" + psiRef + "/" + parRef + "/" + modelRef + "/" + "/rep_" + rep + "/"
 
 # append monitor to log
-monitors.append(mnModel(filename = out_name + "bisse.log", printgen = 100))
+monitors.append(mnModel(filename = out_name + "hisse.log", printgen = 100))
 
 # and to screen
 monitors.append(mnScreen(printgen = 1000))
@@ -66,7 +64,7 @@ monitors.append(mnScreen(printgen = 1000))
 mymcmc = mcmc(mymodel, monitors, moves)
 
 # run mcmc
-mymcmc.run(generations = 100000, tuningInterval = 200, checkpointInterval = 1000, checkpointFile = out_name + "/checkpoint/bisse" + rep + ".state")
+mymcmc.run(generations = 100000, tuningInterval = 200, checkpointInterval = 1000, checkpointFile = out_name + "/checkpoint/hisse" + rep + ".state")
 
 # quit
 q()
