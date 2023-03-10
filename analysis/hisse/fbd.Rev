@@ -26,12 +26,14 @@ mu ~ dnLoguniform(1E-6, 1E2)
 phi ~ dnLoguniform(1E-6, 1E2)
 
 # append moves 
-moves.append(mvScale(lambda, lambda = 0.2, tune = true, weight = 3.0))
-moves.append(mvScale(mu, lambda = 0.2, tune = true, weight = 3.0))
-moves.append(mvScale(phi, lambda = 0.2, tune = true, weight = 3.0))
+moves.append(mvScale(lambda, weight = 3.0))
+moves.append(mvScale(mu, weight = 3.0))
+moves.append(mvScale(phi, weight = 3.0))
 
-# to keep track of diversification rate
-div := lambda - mu
+# set values so it doesn't get stuck
+lambda.setValue(1)
+mu.setValue(1)
+phi.setValue(1)
 
 # sampling at present
 rho <- Probability(1)

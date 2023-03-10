@@ -2,7 +2,7 @@
 [Data written by write.nexus.data.R, Tue Feb 28 05:36:01 2023]
 BEGIN DATA;
   DIMENSIONS NTAX=169 NCHAR=1;
-  FORMAT DATATYPE=STANDARD MISSING=? GAP=- INTERLEAVE=NO symbols="0123456789";
+  FORMAT DATATYPE=STANDARD MISSING=? GAP=- INTERLEAVE=NO symbols="01";
   MATRIX
     t4          0
     t5          0
