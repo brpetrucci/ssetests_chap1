@@ -7,8 +7,7 @@
 
 ###
 # get tensorPhylo
-loadPlugin("TensorPhylo", "/Users/petrucci/Documents/research/programs/tensorphylo/build/installer/lib")
-#"/work/LAS/phylo-lab/petrucci/tensorphylo/build/installer/lib")
+loadPlugin("TensorPhylo", "/work/LAS/phylo-lab/petrucci/tensorphylo/build/installer/lib")
 
 # if model is 1, trait is not necessary, same for 2 and psi
 if (modelComb == 1) {
