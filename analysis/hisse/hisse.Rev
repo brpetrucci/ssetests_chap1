@@ -81,7 +81,7 @@ moves.append(mvDirichletSimplex(pi, weight = 5.0))
 # sampling at present
 rho <- Probability(1)
 
-# set the bisse fbd tree
+# set the hisse fbd tree
 timetree ~ dnGLHBDSP(rootAge = root_age, lambda = lambda, mu = mu, eta = Q, pi = pi, taxa = taxa, rho = rho, nStates = num_rates)
 
 # clamp it to the data
