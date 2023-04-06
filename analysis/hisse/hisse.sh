@@ -21,7 +21,7 @@ printf "rep <- " >> aux/aux_${1}_$rep.Rev
 echo $rep >> aux/aux_${1}_$rep.Rev
 
 # source it, the parameter combination, and the actual script
-rb aux/aux_${1}_$rep.Rev analysis/hisse/refs/refs_${1}.Rev analysis/hisse/master.Rev
+timeout 121h rb aux/aux_${1}_$rep.Rev analysis/hisse/refs/refs_${1}.Rev analysis/hisse/master.Rev
 
 # remove file
 rm aux/aux_${1}_$rep.Rev
