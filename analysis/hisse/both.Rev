@@ -39,7 +39,7 @@ monitors = VectorMonitors()
 # set the model
 
 # set a separate variable for each observed and hidden speciation, extinction, and fossil sampling rate
-for (i in 1:num_states) {
+for (i in 1:num_rates) {
   # set loguniform priors for each of the rates
   lambda[i] ~ dnLoguniform(1E-6, 1E2)
   mu[i] ~ dnLoguniform(1E-6, 1E2)
