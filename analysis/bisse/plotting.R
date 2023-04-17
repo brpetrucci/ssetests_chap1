@@ -170,7 +170,7 @@ rownames(fbd_cov) <- rownames(fbd_refs)
 colnames(fbd_mean) <- colnames(fbd_low)
 
 # mean boxplot
-fbd_mean_bplot_lambda <- ggplot(fbd_mean, aes(factor(comb), lambda1)) + 
+fbd_mean_bplot_lambda <- ggplot(fbd_mean, aes(factor(comb), lambda)) + 
   geom_boxplot(outlier.shape = NA) + 
   geom_point(data = fbd_refs, aes(x = factor(comb), y = lambda1), 
              col = "red", size = 2) + 
@@ -178,7 +178,7 @@ fbd_mean_bplot_lambda <- ggplot(fbd_mean, aes(factor(comb), lambda1)) +
              col = "red", size = 2) + 
   labs(x = "Parameter combination") +
   theme_bw()
-fbd_mean_bplot_mu <- ggplot(fbd_mean, aes(factor(comb), mu1)) + 
+fbd_mean_bplot_mu <- ggplot(fbd_mean, aes(factor(comb), mu)) + 
   geom_boxplot(outlier.shape = NA) + 
   geom_point(data = fbd_refs, aes(x = factor(comb), y = mu1), 
              col = "red", size = 2) + 
@@ -224,7 +224,7 @@ for (i in 1:nrow(bisse_refs)) {
     # get log
     log <- logs[[ref]][[j]]
     
-    # apply burnout
+    # apply burnout and take out pi
     log <- log[(nrow(log)/5):nrow(log), -c(5, 6)]
     
     # get quantiles
@@ -244,7 +244,7 @@ for (i in 1:nrow(bisse_refs)) {
   
   # low and high dfs for this combination
   bisse_low_i <- bisse_low[bisse_low[, 1] == ref, ]
-  bisse_high_i <- bisse_med[bisse_high[, 1] == ref, ]
+  bisse_high_i <- bisse_high[bisse_high[, 1] == ref, ]
   
   # coverage
   bisse_cov <- rbind(bisse_cov, 
@@ -258,7 +258,7 @@ for (i in 1:nrow(bisse_refs)) {
                            bisse_high_i[, 5] > bisse_refs$mu2[i]),
                      sum(bisse_low_i[, 6] < bisse_refs$q01[i] &
                            bisse_high_i[, 6] > bisse_refs$q01[i]),
-                     sum(bisse_low_i[, 7] > bisse_refs$q10[i] &
+                     sum(bisse_low_i[, 7] < bisse_refs$q10[i] &
                            bisse_high_i[, 7] > bisse_refs$q10[i])))
   colnames(bisse_cov) <- c("lambda1", "lambda2", "mu1", "mu2", "q01", "q10")
 }
@@ -271,27 +271,58 @@ rownames(bisse_cov) <- rownames(bisse_refs)
 colnames(bisse_mean) <- colnames(bisse_low)
 
 # mean boxplot
-bisse_mean_bplot_lambda <- ggplot(bisse_mean, aes(factor(comb), lambda)) + 
+bisse_mean_bplot_lambda1 <- ggplot(bisse_mean, aes(factor(comb), lambda1)) + 
   geom_boxplot(outlier.shape = NA) + 
-  geom_point(data = bisse_refs, aes(x = factor(comb), y = lambda), 
-             col = "red", size = 2) + 
-  geom_point(data = bisse_refs, aes(x = factor(comb), y = lambda2), 
-             col = "red", size = 2) + 
+  geom_point(data = bisse_refs, aes(x = factor(comb), y = lambda1), 
+             col = "red", size = 2) +
   labs(x = "Parameter combination") +
   theme_bw()
-bisse_mean_bplot_mu <- ggplot(bisse_mean, aes(factor(comb), mu)) + 
+bisse_mean_bplot_lambda2 <- ggplot(bisse_mean, aes(factor(comb), lambda2)) + 
   geom_boxplot(outlier.shape = NA) + 
-  geom_point(data = bisse_refs, aes(x = factor(comb), y = mu), 
+  geom_point(data = bisse_refs, aes(x = factor(comb), y = lambda2), 
+             col = "red", size = 2) +
+  labs(x = "Parameter combination") +
+  theme_bw()
+bisse_mean_bplot_mu1 <- ggplot(bisse_mean, aes(factor(comb), mu1)) + 
+  geom_boxplot(outlier.shape = NA) + 
+  geom_point(data = bisse_refs, aes(x = factor(comb), y = mu1), 
              col = "red", size = 2) + 
+  ylim(0, 0.05) +
+  labs(x = "Parameter combination") +
+  theme_bw()
+bisse_mean_bplot_mu2 <- ggplot(bisse_mean, aes(factor(comb), mu2)) + 
+  geom_boxplot(outlier.shape = NA) + 
   geom_point(data = bisse_refs, aes(x = factor(comb), y = mu2), 
              col = "red", size = 2) + 
-  ylim(0, 0.1) +
+  ylim(0, 0.061) +
   labs(x = "Parameter combination") +
   theme_bw()
-bisse_mean_bplot_psi <- 
-  ggplot(bisse_mean, aes(reorder(factor(comb), psi, FUN = mean), psi)) + 
-  geom_boxplot(outlier.shape = NA) + geom_point(data = bisse_refs,
-                                                aes(x = reorder(factor(comb), psi), y = psi),
-                                                col = "red", size = 2) + 
-  labs(x = "Parameter combination") + 
+bisse_mean_bplot_q01 <- ggplot(bisse_mean, aes(factor(comb), q01)) + 
+  geom_boxplot(outlier.shape = NA) + 
+  geom_point(data = bisse_refs, aes(x = factor(comb), y = q01), 
+             col = "red", size = 2) + 
+  labs(x = "Parameter combination") +
   theme_bw()
+bisse_mean_bplot_q10 <- ggplot(bisse_mean, aes(factor(comb), q10)) + 
+  geom_boxplot(outlier.shape = NA) + 
+  geom_point(data = bisse_refs, aes(x = factor(comb), y = q10), 
+             col = "red", size = 2) + 
+  labs(x = "Parameter combination") +
+  theme_bw()
+
+# plots equivalent to Maddison 2007 - means
+bisse_comp_lambda <- ggplot(bisse_mean, aes(lambda1, lambda2, 
+                                            color = factor(comb == 11))) +
+  geom_point() +
+  theme_bw()
+bisse_comp_mu <- ggplot(bisse_mean, aes(mu1, mu2, 
+                                            color = factor(comb == 15))) +
+  geom_point() +
+  theme_bw()
+bisse_comp_q <- ggplot(bisse_mean, aes(q01, q10, 
+                                            color = factor(comb == 19))) +
+  geom_point() +
+  theme_bw()
+
+###
+## testing accuracy - BiSSE + FBD
