@@ -11,6 +11,9 @@
 # ggplot2
 library(ggplot2)
 
+# coda
+library(coda)
+
 ###
 ## reading logs
 
@@ -107,8 +110,8 @@ fbd_refs$comb <- as.numeric(rownames(fbd_refs))
 # add true values to the data frame
 fbd_refs$lambda1 <- 0.1
 fbd_refs$lambda2 <- c(0.1, 0.2)[(fbd_refs$parComb == 2) + 1]
-fbd_refs$mu1 <- 0.03
-fbd_refs$mu2 <- c(0.03, 0.06)[(fbd_refs$parComb == 3) + 1]
+fbd_refs$mu1 <- c(0.03, 0.06)[(fbd_refs$parComb == 3) + 1]
+fbd_refs$mu2 <- 0.03
 fbd_refs$psi <- c(0.01, 0.05, 0.1)[fbd_refs$psiComb]
 
 # make data frames for 95% CI and median, and one for mean
@@ -205,8 +208,8 @@ bisse_refs$comb <- as.numeric(rownames(bisse_refs))
 # add true values to the data frame
 bisse_refs$lambda1 <- 0.1
 bisse_refs$lambda2 <- c(0.1, 0.2)[(bisse_refs$parComb == 2) + 1]
-bisse_refs$mu1 <- 0.03
-bisse_refs$mu2 <- c(0.03, 0.06)[(bisse_refs$parComb == 3) + 1]
+bisse_refs$mu1 <- c(0.03, 0.06)[(bisse_refs$parComb == 3) + 1]
+bisse_refs$mu2 <- 0.03
 bisse_refs$q01 <- 0.01
 bisse_refs$q10 <- c(0.01, 0.005)[(bisse_refs$parComb == 4) + 1]
 
@@ -287,7 +290,7 @@ bisse_mean_bplot_mu1 <- ggplot(bisse_mean, aes(factor(comb), mu1)) +
   geom_boxplot(outlier.shape = NA) + 
   geom_point(data = bisse_refs, aes(x = factor(comb), y = mu1), 
              col = "red", size = 2) + 
-  ylim(0, 0.05) +
+  ylim(0, 0.07) +
   labs(x = "Parameter combination") +
   theme_bw()
 bisse_mean_bplot_mu2 <- ggplot(bisse_mean, aes(factor(comb), mu2)) + 
@@ -326,3 +329,342 @@ bisse_comp_q <- ggplot(bisse_mean, aes(q01, q10,
 
 ###
 ## testing accuracy - BiSSE + FBD
+
+# get log indices for the combined reps with real traits
+both_refs <- refs_df[which(refs_df[, 3] == 3 & refs_df[, 4] == 1), ]
+both_refs$comb <- as.numeric(rownames(both_refs))
+
+# add true values to the data frame
+both_refs$lambda1 <- 0.1
+both_refs$lambda2 <- c(0.1, 0.2)[(both_refs$parComb == 2) + 1]
+both_refs$mu1 <- c(0.03, 0.06)[(both_refs$parComb == 3) + 1]
+both_refs$mu2 <- 0.03
+both_refs$q01 <- 0.01
+both_refs$q10 <- c(0.01, 0.005)[(both_refs$parComb == 4) + 1]
+both_refs$psi <- c(0.01, 0.05, 0.1)[fbd_refs$psiComb]
+
+# make data frames for 95% CI and median, one for mean, and one for coverage
+both_low <- both_med <- both_high <- both_mean <- both_cov <-
+  data.frame(matrix(nrow = 0, ncol = 9))
+
+# iterate through logs
+for (i in 1:nrow(both_refs)) {
+  # get ref
+  ref <- both_refs$comb[i]
+  
+  # and reps
+  for (j in 1:n_reps) {
+    # get log
+    log <- logs[[ref]][[j]]
+    
+    # apply burnout and take out pi
+    log <- log[(nrow(log)/5):nrow(log), -c(7, 8)]
+    
+    # get quantiles
+    quants <- do.call(rbind.data.frame, lapply(c(0.025, 0.5, 0.975), 
+                                               function(x)
+                                                 unlist(lapply(1:ncol(log), function(y) quantile(log[, y], x)))))
+    quants <- cbind(rep(ref, 3), quants)
+    colnames(quants) <- c("comb", "lambda1", "lambda2", 
+                          "mu1", "mu2", "psi1", "psi2", "q01", "q10")
+    
+    # fill data frames
+    both_low <- rbind(both_low, quants[1, ])
+    both_med <- rbind(both_med, quants[2, ])
+    both_high <- rbind(both_high, quants[3, ])
+    both_mean <- rbind(both_mean, c(ref, colMeans(log)))
+  }
+  
+  # low and high dfs for this combination
+  both_low_i <- both_low[both_low[, 1] == ref, ]
+  both_high_i <- both_high[both_high[, 1] == ref, ]
+  
+  # coverage
+  both_cov <- rbind(both_cov, 
+                     c(sum(both_low_i[, 2] < both_refs$lambda1[i] & 
+                             both_high_i[, 2] > both_refs$lambda1[i]),
+                       sum(both_low_i[, 3] < both_refs$lambda2[i] &
+                             both_high_i[, 3] > both_refs$lambda2[i]),
+                       sum(both_low_i[, 4] < both_refs$mu1[i] &
+                             both_high_i[, 4] > both_refs$mu1[i]),
+                       sum(both_low_i[, 5] < both_refs$mu2[i] &
+                             both_high_i[, 5] > both_refs$mu2[i]),
+                       sum(both_low_i[, 6] < both_refs$psi[i] &
+                             both_high_i[, 6] > both_refs$psi[i]),
+                       sum(both_low_i[, 7] < both_refs$psi[i] &
+                             both_high_i[, 7] > both_refs$psi[i]),
+                       sum(both_low_i[, 8] < both_refs$q01[i] &
+                             both_high_i[, 8] > both_refs$q01[i]),
+                       sum(both_low_i[, 9] < both_refs$q10[i] &
+                             both_high_i[, 9] > both_refs$q10[i])))
+  colnames(both_cov) <- c("lambda1", "lambda2", "mu1", "mu2", 
+                          "psi1", "psi2", "q01", "q10")
+}
+
+# normalize and name both_cov
+both_cov <- both_cov / n_reps
+rownames(both_cov) <- rownames(both_refs)
+
+# name both_mean
+colnames(both_mean) <- colnames(both_low)
+
+# add true psi to the mean df
+both_mean$true_psi <- unlist(lapply(1:nrow(both_mean), function(x)
+                              both_refs$psi[both_refs$comb == both_mean$comb[x]]))
+
+# mean boxplot
+both_mean_bplot_lambda1 <- ggplot(both_mean, aes(factor(comb), lambda1)) + 
+  geom_boxplot(outlier.shape = NA) + 
+  geom_point(data = both_refs, aes(x = factor(comb), y = lambda1), 
+             col = "red", size = 2) +
+  labs(x = "Parameter combination") +
+  theme_bw()
+both_mean_bplot_lambda2 <- ggplot(both_mean, aes(factor(comb), lambda2)) + 
+  geom_boxplot(outlier.shape = NA) + 
+  geom_point(data = both_refs, aes(x = factor(comb), y = lambda2), 
+             col = "red", size = 2) +
+  labs(x = "Parameter combination") +
+  theme_bw()
+both_mean_bplot_mu1 <- ggplot(both_mean, aes(factor(comb), mu1)) + 
+  geom_boxplot(outlier.shape = NA) + 
+  geom_point(data = both_refs, aes(x = factor(comb), y = mu1), 
+             col = "red", size = 2) + 
+  labs(x = "Parameter combination") +
+  theme_bw()
+both_mean_bplot_mu2 <- ggplot(both_mean, aes(factor(comb), mu2)) + 
+  geom_boxplot(outlier.shape = NA) + 
+  geom_point(data = both_refs, aes(x = factor(comb), y = mu2), 
+             col = "red", size = 2) + 
+  labs(x = "Parameter combination") +
+  theme_bw()
+both_mean_bplot_q01 <- ggplot(both_mean, aes(factor(comb), q01)) + 
+  geom_boxplot(outlier.shape = NA) + 
+  geom_point(data = both_refs, aes(x = factor(comb), y = q01), 
+             col = "red", size = 2) + 
+  labs(x = "Parameter combination") +
+  theme_bw()
+both_mean_bplot_q10 <- ggplot(both_mean, aes(factor(comb), q10)) + 
+  geom_boxplot(outlier.shape = NA) + 
+  geom_point(data = both_refs, aes(x = factor(comb), y = q10), 
+             col = "red", size = 2) + 
+  labs(x = "Parameter combination") +
+  theme_bw()
+both_mean_bplot_psi1 <- 
+  ggplot(both_mean, aes(reorder(factor(comb), psi1, FUN = mean), psi1)) + 
+  geom_boxplot(outlier.shape = NA) + 
+  geom_point(data = both_refs,
+             aes(x = reorder(factor(comb), psi), y = psi),
+             col = "red", size = 2) + 
+  labs(x = "Parameter combination") + 
+  theme_bw()
+both_mean_bplot_psi2 <- 
+  ggplot(both_mean, aes(reorder(factor(comb), psi2, FUN = mean), psi2)) + 
+  geom_boxplot(outlier.shape = NA) + 
+  geom_point(data = both_refs,
+             aes(x = reorder(factor(comb), psi), y = psi),
+             col = "red", size = 2) + 
+  labs(x = "Parameter combination") + 
+  theme_bw()
+
+# plots equivalent to Maddison 2007 - means
+both_comp_lambda <- ggplot(both_mean, aes(lambda1, lambda2, 
+                                          color = factor(comb %in% 35:37),
+                                          shape = factor(true_psi))) +
+  geom_point() +
+  theme_bw()
+both_comp_mu <- ggplot(both_mean, aes(mu1, mu2, 
+                                      color = factor(comb %in% 47:49),
+                                      shape = factor(true_psi))) +
+  geom_point() +
+  geom_hline(yintercept = 0.03) + 
+  geom_vline(xintercept = 0.06) +
+  theme_bw()
+both_comp_mu_zoom <- ggplot(both_mean, aes(mu1, mu2, 
+                                      color = factor(comb %in% 47:49),
+                                      shape = factor(true_psi))) +
+  geom_point() +
+  geom_hline(yintercept = 0.03) + 
+  geom_vline(xintercept = 0.06) +
+  ylim(0, 0.1) + 
+  xlim(0, 0.15) +
+  theme_bw()
+both_comp_q <- ggplot(both_mean, aes(q01, q10, 
+                                     color = factor(comb %in% 59:61),
+                                     shape = factor(true_psi))) +
+  geom_point() +
+  theme_bw()
+
+###
+## testing false positive - BiSSE 
+
+# get log indices for the BiSSE reps
+fp_bisse_refs <- refs_df[which(refs_df[, 3] == 2 & refs_df[, 2] != 4), ]
+fp_bisse_refs$comb <- as.numeric(rownames(fp_bisse_refs))
+
+# add true values to the data frame
+fp_bisse_refs$lambda1 <- 0.1
+fp_bisse_refs$lambda2 <- c(0.1, 0.2)[(fp_bisse_refs$parComb == 2) + 1]
+fp_bisse_refs$mu1 <- c(0.03, 0.06)[(fp_bisse_refs$parComb == 3) + 1]
+fp_bisse_refs$mu2 <- 0.03
+
+# make data frames for 95% CI and median, one for mean, and one for coverage
+fp_bisse_mode <- data.frame(matrix(nrow = 0, ncol = 4))
+
+# iterate through logs
+for (i in 1:nrow(fp_bisse_refs)) {
+  # get ref
+  ref <- fp_bisse_refs$comb[i]
+  
+  # and reps
+  for (j in 1:n_reps) {
+    # get log
+    log <- logs[[ref]][[j]]
+    
+    # apply burnout and take out pi
+    log <- log[(nrow(log)/5):nrow(log), 1:2]
+    
+    # modes
+    modes <- unlist(lapply(1:ncol(log), function(x) 
+      density(log[, x])$x[which.max(density(log[, x])$y)]))
+    
+    # pvalue
+    bf <- ifelse(mean(log[, 2] > log[, 1]) == 1, 151, 
+                 mean(log[, 2] > log[, 1]) / (1 - mean(log[, 2] > log[, 1])))
+    
+    # add modes to data frame
+    fp_bisse_mode <- rbind(fp_bisse_mode, c(ref, modes, bf))
+  }
+  
+  colnames(fp_bisse_mode) <- c("comb", "lambda1", "lambda2", "BF")
+}
+
+# boxplot of modes
+fp_bisse_mode_lambda_bplot <- ggplot(fp_bisse_mode, aes(factor(comb), lambda2 - lambda1)) + 
+  geom_boxplot(outlier.shape = NA) + 
+  labs(x = "Parameter combination") +
+  theme_bw()
+
+# histograms equivalent to Fig. 4 in Rabosky & Goldberg 2015
+par(mfrow = c(2, 4))
+for (parComb in 2:1) {
+  for (traitComb in 1:4) {
+    comb <- fp_bisse_refs$comb[which(fp_bisse_refs$parComb == parComb &
+                                      fp_bisse_refs$traitComb == traitComb)]
+    bf <- fp_bisse_mode$BF[fp_bisse_mode$comb == comb]
+    barplot(bin_bfs(bf, c(1, 3, 20, 150)), 
+            names.arg = c("<1", "1-3", "3-20", "20-150", ">150"))
+  }
+}
+
+###
+## testing false positive - BiSSE + FBD
+
+# get log indices for the BiSSE reps
+fp_both_refs <- refs_df[which(refs_df[, 3] == 3 & refs_df[, 2] != 4), ]
+fp_both_refs$comb <- as.numeric(rownames(fp_both_refs))
+
+# add true values to the data frame
+fp_both_refs$lambda1 <- 0.1
+fp_both_refs$lambda2 <- c(0.1, 0.2)[(fp_both_refs$parComb == 2) + 1]
+fp_both_refs$mu1 <- c(0.03, 0.06)[(fp_both_refs$parComb == 3) + 1]
+fp_both_refs$mu2 <- 0.03
+fp_both_refs$psi <- c(0.01, 0.05, 0.1)[fbd_refs$psiComb]
+
+# make data frames for 95% CI and median, one for mean, and one for coverage
+fp_both_mode <- data.frame(matrix(nrow = 0, ncol = 9))
+
+# iterate through logs
+for (i in 1:nrow(fp_both_refs)) {
+  # get ref
+  ref <- fp_both_refs$comb[i]
+  
+  # and reps
+  for (j in 1:n_reps) {
+    # get log
+    log <- logs[[ref]][[j]]
+    
+    # apply burnout and take out pi
+    log <- log[(nrow(log)/5):nrow(log), 1:6]
+    
+    # modes
+    modes <- unlist(lapply(1:ncol(log), function(x) 
+      density(log[, x])$x[which.max(density(log[, x])$y)]))
+    
+    # Bayes factor
+    lambda_bf <- mean(log[, 2] > log[, 1]) / (1 - mean(log[, 2] > log[, 1]))
+    mu_bf <- mean(log[, 4] > log[, 3]) / (1 - mean(log[, 4] > log[, 3]))
+    
+    # add modes to data frame
+    fp_both_mode <- rbind(fp_both_mode, c(ref, modes, bf))
+  }
+  
+  colnames(fp_both_mode) <- c("comb", "lambda1", "lambda2", "mu1", "mu2",
+                              "psi1", "psi2",
+                              "lambda_BF", "mu_BF")
+}
+
+# boxplot of modes
+fp_both_mode_lambda_bplot <- ggplot(fp_both_mode, aes(factor(comb), lambda2 - lambda1)) + 
+  geom_boxplot(outlier.shape = NA) + 
+  labs(x = "Parameter combination") +
+  theme_bw()
+
+# boxplot of sampling to make sure it's not wrong
+fp_both_mode_bplot_psi1 <- 
+  ggplot(fp_both_mode, aes(reorder(factor(comb), psi1, FUN = mean), psi1)) + 
+  geom_boxplot(outlier.shape = NA) + 
+  geom_point(data = fp_both_refs,
+             aes(x = reorder(factor(comb), psi), y = psi),
+             col = "red", size = 2) + 
+  labs(x = "Parameter combination") + 
+  theme_bw()
+fp_both_mode_bplot_psi2 <- 
+  ggplot(fp_both_mode, aes(reorder(factor(comb), psi2, FUN = mean), psi2)) + 
+  geom_boxplot(outlier.shape = NA) + 
+  geom_point(data = fp_both_refs,
+             aes(x = reorder(factor(comb), psi), y = psi),
+             col = "red", size = 2) + 
+  labs(x = "Parameter combination") + 
+  theme_bw()
+
+# histograms equivalent to Fig. 4 in Rabosky & Goldberg 2015
+par(mfrow = c(2, 4))
+for (psiComb in 1:3) {
+  for (parComb in 2:1) {
+    for (traitComb in 1:4) {
+      comb <- fp_both_refs$comb[which(fp_both_refs$psiComb == psiComb & 
+                                        fp_both_refs$parComb == parComb &
+                                         fp_both_refs$traitComb == traitComb)]
+      bf <- fp_both_mode$BF[fp_both_mode$comb == comb]
+      barplot(bin_bfs(bf, c(1, 3, 20, 150)), 
+              names.arg = c("<1", "1-3", "3-20", "20-150", ">150"))
+    }
+  }
+}
+
+# to talk to tracy about
+# 1. Should I run more analysis for the mu stuff? It seems clear there's a trend but idk
+#   Even for the false positive rates there's an argument to run more. The trend again
+#   seems clear (and the same as R&G), but more reps would help smooth out details. Maybe
+#   compromise at 500 reps of 250-tip trees? Would take forever but for the paper it's fine,
+#   I can start writing etc.
+# 2. Is this way of replicating R&G ok? Clearly it leads to some differences in interpretation.
+#   Could run everything again while keeping lambda0 = lambda1 to do a true LRT, but need to?
+# 3. What should I do about Bayesian? Josh mentioned maybe some metrics of distribution overlap,
+#   that kinda thing might be more Bayesian. Ideas? 
+# 4. Mike May helped me get BFs (or something close, not calibrated, calibrating would be
+#   annoying), so I have a figure that makes more sense. Still wondering if that's interpretable 
+#   considering the R&G figure.
+
+bin_bfs <- function(x, breaks) {
+  res <- rep(0, length(breaks) + 1)
+  
+  res[1] <- sum(x < breaks[1]) / length(x)
+  res[length(res)] <- sum(x > breaks[length(breaks)]) / length(x)
+  
+  for (i in 1:(length(breaks) - 1)) {
+    res[i + 1] <- sum(x > breaks[i] & x < breaks[i + 1]) / length(x)
+  }
+  
+  res
+}
