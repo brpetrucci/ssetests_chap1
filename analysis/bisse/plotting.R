@@ -10,6 +10,7 @@
 
 # ggplot2
 library(ggplot2)
+library(glue)
 
 # coda
 library(coda)
@@ -317,15 +318,53 @@ bisse_mean_bplot_q10 <- ggplot(bisse_mean, aes(factor(comb), q10)) +
 bisse_comp_lambda <- ggplot(bisse_mean, aes(lambda1, lambda2, 
                                             color = factor(comb == 11))) +
   geom_point() +
-  theme_bw()
+  geom_hline(yintercept = c(0.1, 0.2), color = c("#E69F00", "#56B4E9")) +
+  scale_color_manual(name = expression("True "*lambda['1']),
+                     labels = c(0.1, 0.2),
+                     values = c("#E69F00", "#56B4E9")) + 
+  labs(title = "Speciation rate estimates", 
+       x = expression("Estimated "*lambda['0']),
+       y = expression("Estimated "*lambda['1'])) +
+  theme_bw() + 
+  theme(title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14))
+
 bisse_comp_mu <- ggplot(bisse_mean, aes(mu1, mu2, 
                                             color = factor(comb == 15))) +
   geom_point() +
-  theme_bw()
+  geom_vline(xintercept = c(0.03, 0.06), color = c("#E69F00", "#56B4E9")) +
+  scale_color_manual(name = expression("True "*mu['0']),
+                     labels = c(0.03, 0.06),
+                     values = c("#E69F00", "#56B4E9")) + 
+  labs(title = "Extinction rate estimates", 
+       x = expression("Estimated "*mu['0']),
+       y = expression("Estimated "*mu['1'])) +
+  theme_bw() + 
+  theme(title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14))
+
 bisse_comp_q <- ggplot(bisse_mean, aes(q01, q10, 
                                             color = factor(comb == 19))) +
   geom_point() +
-  theme_bw()
+  geom_hline(yintercept = c(0.01, 0.005), color = c("#E69F00", "#56B4E9")) +
+  scale_color_manual(name = expression("True "*q['10']),
+                     labels = c(0.01, 0.005),
+                     values = c("#E69F00", "#56B4E9")) + 
+  labs(title = "Transition rate estimates", 
+       x = expression("Estimated "*q['01']),
+       y = expression("Estimated "*q['10'])) +
+  theme_bw() + 
+  theme(title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14))
 
 ###
 ## testing accuracy - BiSSE + FBD
@@ -466,33 +505,83 @@ both_mean_bplot_psi2 <-
   labs(x = "Parameter combination") + 
   theme_bw()
 
+# labeller for psi plots
+psi_labels <- c('psi* " = 0.05"', "psi = 0.05", "psi = 0.1")#list(expression(psi* "= 0.01"), 
+              #     expression(psi* "= 0.05"),
+              #     expression(psi* "= 0.1"))
+names(psi_labels) <- as.factor(c(0.01, 0.05, 0.1))
+
 # plots equivalent to Maddison 2007 - means
-both_comp_lambda <- ggplot(both_mean, aes(lambda1, lambda2, 
-                                          color = factor(comb %in% 35:37),
-                                          shape = factor(true_psi))) +
+both_comp_lambda <- ggplot(both_mean[both_mean$comb %in% c(23:25, 35:37), ], 
+                           aes(lambda1, lambda2, 
+                               color = factor(comb %in% 35:37))) +
   geom_point() +
-  theme_bw()
-both_comp_mu <- ggplot(both_mean, aes(mu1, mu2, 
-                                      color = factor(comb %in% 47:49),
-                                      shape = factor(true_psi))) +
+  geom_hline(yintercept = c(0.1, 0.2), color = c("#E69F00", "#56B4E9", 
+                                                   "#E69F00", "#56B4E9", 
+                                                   "#E69F00", "#56B4E9")) +
+  scale_color_manual(name = expression("True "*lambda['1']),
+                     labels = c(0.1, 0.2),
+                     values = c("#E69F00", "#56B4E9", "#E69F00", "#56B4E9",
+                                "#E69F00", "#56B4E9")) + 
+  labs(title = expression("Speciation rate estimates"), 
+       x = expression("Estimated "*lambda['0']),
+       y = expression("Estimated "*lambda['1'])) +
+  facet_grid(. ~ glue('psi*" = {true_psi}"'), labeller = label_parsed) +
+  theme_bw() +
+  theme(title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14),
+        strip.text.x = element_text(size = 14))
+
+both_comp_mu <- ggplot(both_mean[both_mean$comb %in% c(23:25, 47:49), ], 
+                       aes(mu1, mu2, 
+                           color = factor(comb %in% 47:49))) +
   geom_point() +
-  geom_hline(yintercept = 0.03) + 
-  geom_vline(xintercept = 0.06) +
-  theme_bw()
-both_comp_mu_zoom <- ggplot(both_mean, aes(mu1, mu2, 
-                                      color = factor(comb %in% 47:49),
-                                      shape = factor(true_psi))) +
-  geom_point() +
-  geom_hline(yintercept = 0.03) + 
-  geom_vline(xintercept = 0.06) +
-  ylim(0, 0.1) + 
-  xlim(0, 0.15) +
-  theme_bw()
+  geom_vline(xintercept = c(0.03, 0.06), color = c("#E69F00", "#56B4E9", 
+                                                   "#E69F00", "#56B4E9", 
+                                                   "#E69F00", "#56B4E9")) +
+  scale_color_manual(name = expression("True "*mu['0']),
+                     labels = c(0.03, 0.06),
+                     values = c("#E69F00", "#56B4E9", "#E69F00", "#56B4E9",
+                                "#E69F00", "#56B4E9")) + 
+  labs(title = expression("Extinction rate estimates"), 
+       x = expression("Estimated "*mu['0']),
+       y = expression("Estimated "*mu['1']), 
+       grid = expression("True "*psi)) +
+  facet_grid(. ~ glue('psi*" = {true_psi}"'), labeller = label_parsed) +
+  theme_bw() +
+  theme(title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14),
+        strip.text.x = element_text(size = 14))
+
+
 both_comp_q <- ggplot(both_mean, aes(q01, q10, 
-                                     color = factor(comb %in% 59:61),
-                                     shape = factor(true_psi))) +
+                                     color = factor(comb %in% 59:61))) +
   geom_point() +
-  theme_bw()
+  geom_hline(yintercept = c(0.01, 0.005), color = c("#E69F00", "#56B4E9", 
+                                                   "#E69F00", "#56B4E9", 
+                                                   "#E69F00", "#56B4E9")) +
+  scale_color_manual(name = expression("True "*q['10']),
+                     labels = c(0.01, 0.005),
+                     values = c("#E69F00", "#56B4E9", "#E69F00", "#56B4E9",
+                                "#E69F00", "#56B4E9")) + 
+  labs(title = expression("Transition rate estimates"), 
+       x = expression("Estimated "*q['01']),
+       y = expression("Estimated "*q['10']), 
+       grid = expression("True "*psi)) +
+  facet_grid(. ~ glue('psi*" = {true_psi}"'), labeller = label_parsed) +
+  theme_bw() +
+  theme(title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14),
+        strip.text.x = element_text(size = 14))
 
 ###
 ## testing false positive - BiSSE 
@@ -528,14 +617,15 @@ for (i in 1:nrow(fp_bisse_refs)) {
       density(log[, x])$x[which.max(density(log[, x])$y)]))
     
     # pvalue
-    bf <- ifelse(mean(log[, 2] > log[, 1]) == 1, 151, 
-                 mean(log[, 2] > log[, 1]) / (1 - mean(log[, 2] > log[, 1])))
+    post_prob <- mean(log[, 2] > log[, 1])
+      #ifelse(mean(log[, 2] > log[, 1]) == 1, 151, 
+          #      mean(log[, 2] > log[, 1]) / (1 - mean(log[, 2] > log[, 1])))
     
     # add modes to data frame
-    fp_bisse_mode <- rbind(fp_bisse_mode, c(ref, modes, bf))
+    fp_bisse_mode <- rbind(fp_bisse_mode, c(ref, modes, post_prob))
   }
   
-  colnames(fp_bisse_mode) <- c("comb", "lambda1", "lambda2", "BF")
+  colnames(fp_bisse_mode) <- c("comb", "lambda1", "lambda2", "post_prob")
 }
 
 # boxplot of modes
@@ -550,9 +640,8 @@ for (parComb in 2:1) {
   for (traitComb in 1:4) {
     comb <- fp_bisse_refs$comb[which(fp_bisse_refs$parComb == parComb &
                                       fp_bisse_refs$traitComb == traitComb)]
-    bf <- fp_bisse_mode$BF[fp_bisse_mode$comb == comb]
-    barplot(bin_bfs(bf, c(1, 3, 20, 150)), 
-            names.arg = c("<1", "1-3", "3-20", "20-150", ">150"))
+    post_prob <- fp_bisse_mode$post_prob[fp_bisse_mode$comb == comb]
+    hist(post_prob)
   }
 }
 
@@ -591,16 +680,17 @@ for (i in 1:nrow(fp_both_refs)) {
       density(log[, x])$x[which.max(density(log[, x])$y)]))
     
     # Bayes factor
-    lambda_bf <- mean(log[, 2] > log[, 1]) / (1 - mean(log[, 2] > log[, 1]))
-    mu_bf <- mean(log[, 4] > log[, 3]) / (1 - mean(log[, 4] > log[, 3]))
+    lambda_post_prob <- mean(log[, 2] > log[, 1]) #/ (1 - mean(log[, 2] > log[, 1]))
+    mu_post_prob <- mean(log[, 4] > log[, 3]) #/ (1 - mean(log[, 4] > log[, 3]))
     
     # add modes to data frame
-    fp_both_mode <- rbind(fp_both_mode, c(ref, modes, bf))
+    fp_both_mode <- rbind(fp_both_mode, c(ref, modes, 
+                                          lambda_post_prob, mu_post_prob))
   }
   
   colnames(fp_both_mode) <- c("comb", "lambda1", "lambda2", "mu1", "mu2",
                               "psi1", "psi2",
-                              "lambda_BF", "mu_BF")
+                              "lambda_post_prob", "mu_post_prob")
 }
 
 # boxplot of modes
@@ -635,36 +725,8 @@ for (psiComb in 1:3) {
       comb <- fp_both_refs$comb[which(fp_both_refs$psiComb == psiComb & 
                                         fp_both_refs$parComb == parComb &
                                          fp_both_refs$traitComb == traitComb)]
-      bf <- fp_both_mode$BF[fp_both_mode$comb == comb]
-      barplot(bin_bfs(bf, c(1, 3, 20, 150)), 
-              names.arg = c("<1", "1-3", "3-20", "20-150", ">150"))
+      lambda_post_prob <- fp_both_mode$lambda_post_prob[fp_both_mode$comb == comb]
+      hist(lambda_post_prob)
     }
   }
-}
-
-# to talk to tracy about
-# 1. Should I run more analysis for the mu stuff? It seems clear there's a trend but idk
-#   Even for the false positive rates there's an argument to run more. The trend again
-#   seems clear (and the same as R&G), but more reps would help smooth out details. Maybe
-#   compromise at 500 reps of 250-tip trees? Would take forever but for the paper it's fine,
-#   I can start writing etc.
-# 2. Is this way of replicating R&G ok? Clearly it leads to some differences in interpretation.
-#   Could run everything again while keeping lambda0 = lambda1 to do a true LRT, but need to?
-# 3. What should I do about Bayesian? Josh mentioned maybe some metrics of distribution overlap,
-#   that kinda thing might be more Bayesian. Ideas? 
-# 4. Mike May helped me get BFs (or something close, not calibrated, calibrating would be
-#   annoying), so I have a figure that makes more sense. Still wondering if that's interpretable 
-#   considering the R&G figure.
-
-bin_bfs <- function(x, breaks) {
-  res <- rep(0, length(breaks) + 1)
-  
-  res[1] <- sum(x < breaks[1]) / length(x)
-  res[length(res)] <- sum(x > breaks[length(breaks)]) / length(x)
-  
-  for (i in 1:(length(breaks) - 1)) {
-    res[i + 1] <- sum(x > breaks[i] & x < breaks[i + 1]) / length(x)
-  }
-  
-  res
 }
