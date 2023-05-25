@@ -634,16 +634,39 @@ fp_bisse_mode_lambda_bplot <- ggplot(fp_bisse_mode, aes(factor(comb), lambda2 - 
   labs(x = "Parameter combination") +
   theme_bw()
 
-# histograms equivalent to Fig. 4 in Rabosky & Goldberg 2015
-par(mfrow = c(2, 4))
-for (parComb in 2:1) {
-  for (traitComb in 1:4) {
-    comb <- fp_bisse_refs$comb[which(fp_bisse_refs$parComb == parComb &
-                                      fp_bisse_refs$traitComb == traitComb)]
-    post_prob <- fp_bisse_mode$post_prob[fp_bisse_mode$comb == comb]
-    hist(post_prob)
-  }
-}
+# change df a bit
+fp_bisse_mode <- fp_bisse_mode[fp_bisse_mode$comb %in% 7:14, ]
+fp_bisse_mode$parComb <- unlist(lapply(1:nrow(fp_bisse_mode), 
+        function(x) 
+          fp_bisse_refs$parComb[fp_bisse_refs$comb == fp_bisse_mode$comb[x]]))
+fp_bisse_mode$parComb <- factor(fp_bisse_mode$parComb, levels = c(2, 1))
+fp_bisse_mode$traitComb <- unlist(lapply(1:nrow(fp_bisse_mode), 
+        function(x) 
+          fp_bisse_refs$traitComb[fp_bisse_refs$comb == fp_bisse_mode$comb[x]]))
+
+# make a labeller for facet_grid
+trait_labs <- c("Real trait", "q = 0.01", "q = 0.1", "q = 1")
+names(trait_labs) <- 1:4
+par_labs <- c("Rare shifts", "No shifts")
+names(par_labs) <- 2:1
+
+# plot facet_grid
+fp_bisse_hist <- ggplot(fp_bisse_mode, aes(post_prob)) +
+  geom_histogram(aes(y = stat(count / sum(count))), binwidth = 0.1) +
+  facet_grid(parComb ~ traitComb, 
+             labeller = labeller(parComb = par_labs, traitComb = trait_labs)) + 
+  labs(title = 
+         expression("Posterior probability of "*lambda['1']*" > "*lambda['0']),
+       x = "Posterior probability", 
+       y = "Proportion of simulations") +
+  theme_bw() +
+  theme(title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14),
+        strip.text.x = element_text(size = 14),
+        strip.text.y = element_text(size = 14))
 
 ###
 ## testing false positive - BiSSE + FBD
@@ -681,7 +704,7 @@ for (i in 1:nrow(fp_both_refs)) {
     
     # Bayes factor
     lambda_post_prob <- mean(log[, 2] > log[, 1]) #/ (1 - mean(log[, 2] > log[, 1]))
-    mu_post_prob <- mean(log[, 4] > log[, 3]) #/ (1 - mean(log[, 4] > log[, 3]))
+    mu_post_prob <- mean(log[, 3] > log[, 4]) #/ (1 - mean(log[, 4] > log[, 3]))
     
     # add modes to data frame
     fp_both_mode <- rbind(fp_both_mode, c(ref, modes, 
@@ -695,6 +718,10 @@ for (i in 1:nrow(fp_both_refs)) {
 
 # boxplot of modes
 fp_both_mode_lambda_bplot <- ggplot(fp_both_mode, aes(factor(comb), lambda2 - lambda1)) + 
+  geom_boxplot(outlier.shape = NA) + 
+  labs(x = "Parameter combination") +
+  theme_bw()
+fp_both_mode_mu_bplot <- ggplot(fp_both_mode, aes(factor(comb), mu2 - mu1)) + 
   geom_boxplot(outlier.shape = NA) + 
   labs(x = "Parameter combination") +
   theme_bw()
@@ -717,16 +744,160 @@ fp_both_mode_bplot_psi2 <-
   labs(x = "Parameter combination") + 
   theme_bw()
 
-# histograms equivalent to Fig. 4 in Rabosky & Goldberg 2015
-par(mfrow = c(2, 4))
-for (psiComb in 1:3) {
-  for (parComb in 2:1) {
-    for (traitComb in 1:4) {
-      comb <- fp_both_refs$comb[which(fp_both_refs$psiComb == psiComb & 
-                                        fp_both_refs$parComb == parComb &
-                                         fp_both_refs$traitComb == traitComb)]
-      lambda_post_prob <- fp_both_mode$lambda_post_prob[fp_both_mode$comb == comb]
-      hist(lambda_post_prob)
-    }
-  }
-}
+## lambda first
+# change df a bit
+fp_both_mode_lambda <- fp_both_mode[fp_both_mode$comb %in% 23:46, ]
+fp_both_mode_lambda$parComb <- unlist(lapply(1:nrow(fp_both_mode_lambda), 
+      function(x) 
+        fp_both_refs$parComb[fp_both_refs$comb == fp_both_mode_lambda$comb[x]]))
+fp_both_mode_lambda$parComb <- factor(fp_both_mode_lambda$parComb, 
+                                      levels = c(2, 1))
+fp_both_mode_lambda$traitComb <- unlist(lapply(1:nrow(fp_both_mode_lambda), 
+      function(x) 
+        fp_both_refs$traitComb[fp_both_refs$comb == fp_both_mode_lambda$comb[x]]))
+fp_both_mode_lambda$psiComb <- unlist(lapply(1:nrow(fp_both_mode_lambda),
+      function(x)
+        fp_both_refs$psiComb[fp_both_refs$comb == fp_both_mode_lambda$comb[x]]))
+
+# make a labeller for facet_grid
+trait_labs <- c("Real trait", "q = 0.01", "q = 0.1", "q = 1")
+names(trait_labs) <- 1:4
+par_labs <- c("Rare shifts", "No shifts")
+names(par_labs) <- 2:1
+
+# plot facet_grid
+fp_both_lambda_low <- 
+  ggplot(fp_both_mode_lambda[fp_both_mode_lambda$psiComb == 1, ], 
+      aes(lambda_post_prob)) +
+geom_histogram(aes(y = stat(count / sum(count))), binwidth = 0.1) +
+facet_grid(parComb ~ traitComb, 
+           labeller = labeller(parComb = par_labs, 
+                               traitComb = trait_labs)) + 
+labs(title = expression("Posterior probability of "*lambda['1']*" > "*lambda['0']*", "*psi*" = "*0.01),
+     x = "Posterior probability", 
+     y = "Proportion of simulations") +
+theme_bw() +
+theme(title = element_text(size = 16),
+      axis.text = element_text(size = 12),
+      axis.title = element_text(size = 14),
+      legend.text = element_text(size = 12),
+      legend.title = element_text(size = 14),
+      strip.text.x = element_text(size = 14),
+      strip.text.y = element_text(size = 14))
+
+fp_both_lambda_mid <- 
+  ggplot(fp_both_mode_lambda[fp_both_mode_lambda$psiComb == 2, ], 
+         aes(lambda_post_prob)) +
+  geom_histogram(aes(y = stat(count / sum(count))), binwidth = 0.1) +
+  facet_grid(parComb ~ traitComb, 
+             labeller = labeller(parComb = par_labs, 
+                                 traitComb = trait_labs)) + 
+  labs(title = expression("Posterior probability of "*lambda['1']*" > "*lambda['0']*", "*psi*" = "*0.05),
+       x = "Posterior probability", 
+       y = "Proportion of simulations") +
+  theme_bw() +
+  theme(title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14),
+        strip.text.x = element_text(size = 14),
+        strip.text.y = element_text(size = 14))
+
+fp_both_lambda_high <- 
+  ggplot(fp_both_mode_lambda[fp_both_mode_lambda$psiComb == 3, ], 
+         aes(lambda_post_prob)) +
+  geom_histogram(aes(y = stat(count / sum(count))), binwidth = 0.1) +
+  facet_grid(parComb ~ traitComb, 
+             labeller = labeller(parComb = par_labs, 
+                                 traitComb = trait_labs)) + 
+  labs(title = expression("Posterior probability of "*lambda['1']*" > "*lambda['0']*", "*psi*" = "*0.1),
+       x = "Posterior probability", 
+       y = "Proportion of simulations") +
+  theme_bw() +
+  theme(title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14),
+        strip.text.x = element_text(size = 14),
+        strip.text.y = element_text(size = 14))
+
+## mu
+# change df a bit
+fp_both_mode_mu <- fp_both_mode[fp_both_mode$comb %in% 23:46, ]
+fp_both_mode_mu$parComb <- unlist(lapply(1:nrow(fp_both_mode_mu), 
+                                             function(x) 
+                                               fp_both_refs$parComb[fp_both_refs$comb == fp_both_mode_mu$comb[x]]))
+fp_both_mode_mu$parComb <- factor(fp_both_mode_mu$parComb, 
+                                      levels = c(2, 1))
+fp_both_mode_mu$traitComb <- unlist(lapply(1:nrow(fp_both_mode_mu), 
+                                               function(x) 
+                                                 fp_both_refs$traitComb[fp_both_refs$comb == fp_both_mode_mu$comb[x]]))
+fp_both_mode_mu$psiComb <- unlist(lapply(1:nrow(fp_both_mode_mu),
+                                             function(x)
+                                               fp_both_refs$psiComb[fp_both_refs$comb == fp_both_mode_mu$comb[x]]))
+
+# make a labeller for facet_grid
+trait_labs <- c("Real trait", "q = 0.01", "q = 0.1", "q = 1")
+names(trait_labs) <- 1:4
+par_labs <- c("Rare shifts", "No shifts")
+names(par_labs) <- 2:1
+
+# plot facet_grid
+fp_both_mu_low <- 
+  ggplot(fp_both_mode_mu[fp_both_mode_mu$psiComb == 1, ], 
+         aes(mu_post_prob)) +
+  geom_histogram(aes(y = stat(count / sum(count))), binwidth = 0.1) +
+  facet_grid(parComb ~ traitComb, 
+             labeller = labeller(parComb = par_labs, 
+                                 traitComb = trait_labs)) + 
+  labs(title = expression("Posterior probability of "*mu['0']*" > "*mu['1']*", "*psi*" = "*0.01),
+       x = "Posterior probability", 
+       y = "Proportion of simulations") +
+  theme_bw() +
+  theme(title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14),
+        strip.text.x = element_text(size = 14),
+        strip.text.y = element_text(size = 14))
+
+fp_both_mu_mid <- 
+  ggplot(fp_both_mode_mu[fp_both_mode_mu$psiComb == 2, ], 
+         aes(mu_post_prob)) +
+  geom_histogram(aes(y = stat(count / sum(count))), binwidth = 0.1) +
+  facet_grid(parComb ~ traitComb, 
+             labeller = labeller(parComb = par_labs, 
+                                 traitComb = trait_labs)) + 
+  labs(title = expression("Posterior probability of "*mu['0']*" > "*mu['1']*", "*psi*" = "*0.05),
+       x = "Posterior probability", 
+       y = "Proportion of simulations") +
+  theme_bw() +
+  theme(title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14),
+        strip.text.x = element_text(size = 14),
+        strip.text.y = element_text(size = 14))
+
+s <- 
+  ggplot(fp_both_mode_mu[fp_both_mode_mu$psiComb == 3, ], 
+         aes(mu_post_prob)) +
+  geom_histogram(aes(y = stat(count / sum(count))), binwidth = 0.1) +
+  facet_grid(parComb ~ traitComb, 
+             labeller = labeller(parComb = par_labs, 
+                                 traitComb = trait_labs)) + 
+  labs(title = expression("Posterior probability of "*mu['0']*" > "*mu['1']*", "*psi*" = "*0.1),
+       x = "Posterior probability", 
+       y = "Proportion of simulations") +
+  theme_bw() +
+  theme(title = element_text(size = 16),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14),
+        strip.text.x = element_text(size = 14),
+        strip.text.y = element_text(size = 14))
