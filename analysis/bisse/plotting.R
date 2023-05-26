@@ -652,7 +652,8 @@ names(par_labs) <- 2:1
 
 # plot facet_grid
 fp_bisse_hist <- ggplot(fp_bisse_mode, aes(post_prob)) +
-  geom_histogram(aes(y = stat(count / sum(count))), binwidth = 0.1) +
+  geom_histogram(aes(y = stat(count / sum(count))), binwidth = 0.1, 
+                 fill = "#56B4E9", color = "#0072B2") +
   facet_grid(parComb ~ traitComb, 
              labeller = labeller(parComb = par_labs, traitComb = trait_labs)) + 
   labs(title = 
@@ -769,7 +770,8 @@ names(par_labs) <- 2:1
 fp_both_lambda_low <- 
   ggplot(fp_both_mode_lambda[fp_both_mode_lambda$psiComb == 1, ], 
       aes(lambda_post_prob)) +
-geom_histogram(aes(y = stat(count / sum(count))), binwidth = 0.1) +
+geom_histogram(aes(y = stat(count / sum(count))), binwidth = 0.1, 
+               fill = "#56B4E9", color = "#0072B2") +
 facet_grid(parComb ~ traitComb, 
            labeller = labeller(parComb = par_labs, 
                                traitComb = trait_labs)) + 
@@ -788,7 +790,8 @@ theme(title = element_text(size = 16),
 fp_both_lambda_mid <- 
   ggplot(fp_both_mode_lambda[fp_both_mode_lambda$psiComb == 2, ], 
          aes(lambda_post_prob)) +
-  geom_histogram(aes(y = stat(count / sum(count))), binwidth = 0.1) +
+  geom_histogram(aes(y = stat(count / sum(count))), binwidth = 0.1, 
+                 fill = "#56B4E9", color = "#0072B2") +
   facet_grid(parComb ~ traitComb, 
              labeller = labeller(parComb = par_labs, 
                                  traitComb = trait_labs)) + 
@@ -807,7 +810,8 @@ fp_both_lambda_mid <-
 fp_both_lambda_high <- 
   ggplot(fp_both_mode_lambda[fp_both_mode_lambda$psiComb == 3, ], 
          aes(lambda_post_prob)) +
-  geom_histogram(aes(y = stat(count / sum(count))), binwidth = 0.1) +
+  geom_histogram(aes(y = stat(count / sum(count))), binwidth = 0.1, 
+                 fill = "#56B4E9", color = "#0072B2") +
   facet_grid(parComb ~ traitComb, 
              labeller = labeller(parComb = par_labs, 
                                  traitComb = trait_labs)) + 
@@ -848,7 +852,8 @@ names(par_labs) <- 2:1
 fp_both_mu_low <- 
   ggplot(fp_both_mode_mu[fp_both_mode_mu$psiComb == 1, ], 
          aes(mu_post_prob)) +
-  geom_histogram(aes(y = stat(count / sum(count))), binwidth = 0.1) +
+  geom_histogram(aes(y = stat(count / sum(count))), binwidth = 0.1, 
+                 fill = "#56B4E9", color = "#0072B2") +
   facet_grid(parComb ~ traitComb, 
              labeller = labeller(parComb = par_labs, 
                                  traitComb = trait_labs)) + 
@@ -867,7 +872,8 @@ fp_both_mu_low <-
 fp_both_mu_mid <- 
   ggplot(fp_both_mode_mu[fp_both_mode_mu$psiComb == 2, ], 
          aes(mu_post_prob)) +
-  geom_histogram(aes(y = stat(count / sum(count))), binwidth = 0.1) +
+  geom_histogram(aes(y = stat(count / sum(count))), binwidth = 0.1, 
+                 fill = "#56B4E9", color = "#0072B2") +
   facet_grid(parComb ~ traitComb, 
              labeller = labeller(parComb = par_labs, 
                                  traitComb = trait_labs)) + 
@@ -883,10 +889,11 @@ fp_both_mu_mid <-
         strip.text.x = element_text(size = 14),
         strip.text.y = element_text(size = 14))
 
-s <- 
+fp_both_mu_high <- 
   ggplot(fp_both_mode_mu[fp_both_mode_mu$psiComb == 3, ], 
          aes(mu_post_prob)) +
-  geom_histogram(aes(y = stat(count / sum(count))), binwidth = 0.1) +
+  geom_histogram(aes(y = stat(count / sum(count))), binwidth = 0.1, 
+                 fill = "#56B4E9", color = "#0072B2") +
   facet_grid(parComb ~ traitComb, 
              labeller = labeller(parComb = par_labs, 
                                  traitComb = trait_labs)) + 
