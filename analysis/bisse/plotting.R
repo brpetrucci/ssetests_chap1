@@ -315,8 +315,9 @@ bisse_mean_bplot_q10 <- ggplot(bisse_mean, aes(factor(comb), q10)) +
   theme_bw()
 
 # plots equivalent to Maddison 2007 - means
-bisse_comp_lambda <- ggplot(bisse_mean, aes(lambda1, lambda2, 
-                                            color = factor(comb == 11))) +
+bisse_comp_lambda <- ggplot(bisse_mean[bisse_mean$comb %in% c(7, 11),], 
+                            aes(lambda1, lambda2, 
+                                color = factor(comb == 11))) +
   geom_point() +
   geom_hline(yintercept = c(0.1, 0.2), color = c("#E69F00", "#56B4E9")) +
   scale_color_manual(name = expression("True "*lambda['1']),
@@ -332,8 +333,9 @@ bisse_comp_lambda <- ggplot(bisse_mean, aes(lambda1, lambda2,
         legend.text = element_text(size = 12),
         legend.title = element_text(size = 14))
 
-bisse_comp_mu <- ggplot(bisse_mean, aes(mu1, mu2, 
-                                            color = factor(comb == 15))) +
+bisse_comp_mu <- ggplot(bisse_mean[bisse_mean$comb %in% c(7, 15),], 
+                        aes(mu1, mu2, 
+                            color = factor(comb == 15))) +
   geom_point() +
   geom_vline(xintercept = c(0.03, 0.06), color = c("#E69F00", "#56B4E9")) +
   scale_color_manual(name = expression("True "*mu['0']),
@@ -349,8 +351,9 @@ bisse_comp_mu <- ggplot(bisse_mean, aes(mu1, mu2,
         legend.text = element_text(size = 12),
         legend.title = element_text(size = 14))
 
-bisse_comp_q <- ggplot(bisse_mean, aes(q01, q10, 
-                                            color = factor(comb == 19))) +
+bisse_comp_q <- ggplot(bisse_mean[bisse_mean$comb %in% c(7, 19),], 
+                       aes(q01, q10, 
+                           color = factor(comb == 19))) +
   geom_point() +
   geom_hline(yintercept = c(0.01, 0.005), color = c("#E69F00", "#56B4E9")) +
   scale_color_manual(name = expression("True "*q['10']),
