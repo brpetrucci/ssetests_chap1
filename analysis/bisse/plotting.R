@@ -296,6 +296,18 @@ colnames(bisse_mean) <- colnames(bisse_low)
 # round PCE
 bisse_pce <- round(bisse_pce, digits = 3)
 
+# get mean precision per comb
+precision_q01 <- unlist(lapply(unique(bisse_mean$comb), 
+                               function(x) 
+                                 mean(bisse_high$q01[bisse_high$comb == x] - 
+                                        bisse_low$q01[bisse_low$comb == x])))
+names(precision_q01) <- unique(bisse_mean$comb)
+precision_q10 <- unlist(lapply(unique(bisse_mean$comb), 
+                               function(x) 
+                                 mean(bisse_high$q10[bisse_high$comb == x] - 
+                                        bisse_low$q10[bisse_low$comb == x])))
+names(precision_q10) <- unique(bisse_mean$comb)
+
 # mean boxplot
 bisse_mean_bplot_lambda1 <- ggplot(bisse_mean, aes(factor(comb), lambda1)) + 
   geom_boxplot(outlier.shape = NA) + 
@@ -702,10 +714,6 @@ for (i in 1:nrow(both_refs)) {
   colnames(both_pce) <- colnames(both_cov)
 }
 
-# make comb and comb_seq columns the same
-both_mean$comb <- both_mean$comb_seq
-both_refs$comb <- both_refs$comb_seq
-
 # normalize and name both_cov
 both_cov <- both_cov / n_reps
 rownames(both_cov) <- rownames(both_pce) <- rownames(both_refs)
@@ -715,6 +723,18 @@ colnames(both_mean) <- colnames(both_low)
 
 # round PCE
 both_pce <- round(both_pce, digits = 3)
+
+# transition rate precision
+precision_q01 <- unlist(lapply(unique(both_mean$comb), 
+                               function(x) 
+                                 mean(both_high$q01[both_high$comb == x] - 
+                                        both_low$q01[both_low$comb == x])))
+names(precision_q01) <- unique(both_mean$comb)
+precision_q10 <- unlist(lapply(unique(both_mean$comb), 
+                               function(x) 
+                                 mean(both_high$q10[both_high$comb == x] - 
+                                        both_low$q10[both_low$comb == x])))
+names(precision_q10) <- unique(both_mean$comb)
 
 # add true psi to the mean df
 both_mean$true_psi <- unlist(lapply(1:nrow(both_mean), function(x)
@@ -781,12 +801,17 @@ psi_labels <- c('psi* " = 0.05"', "psi = 0.05", "psi = 0.1")#list(expression(psi
 names(psi_labels) <- as.factor(c(0.01, 0.05, 0.1))
 
 # ridge plots
-both_ridge_lambda1 <- ggplot(both_mean[both_mean$comb %in% 1:6, ], 
+both_mean_lambda <- both_mean[both_mean$comb %in% c(23:25, 35:37), ]
+both_mean_lambda$comb[both_mean_lambda$comb %in% 23:25] <- 1
+both_mean_lambda$comb[both_mean_lambda$comb %in% 35:37] <- 2
+
+both_ridge_lambda1 <- ggplot(both_mean_lambda, 
                              aes(x = lambda1, y = comb, 
-                                 fill = factor(comb %in% 4:6),
-                                 color = factor(comb %in% 4:6))) +
+                                 fill = factor(comb == 2),
+                                 color = factor(comb == 2))) +
   geom_density_ridges() +
   geom_vline(xintercept = 0.1, color = "black", lwd = 1) +
+  xlim(0, 0.21) +
   scale_fill_manual(name = "Scenario",
                     labels = c(1, 2),
                     values = c("#E69F00", "#56B4E9", 
@@ -801,31 +826,31 @@ both_ridge_lambda1 <- ggplot(both_mean[both_mean$comb %in% 1:6, ],
   geom_text(data = data.frame(label = c(paste0("Cov = ", both_cov$lambda1[1]),
                                         paste0("Cov = ", both_cov$lambda1[2]),
                                         paste0("Cov = ", both_cov$lambda1[3])),
-                              comb = 1:3,
+                              comb = 1,
                               true_psi = c(0.01, 0.05, 0.1)),
-            mapping = aes(x = 0.16, y = 3.75, label = label),
-            size = 6) +
+            mapping = aes(x = 0.17, y = 1.75, label = label),
+            size = 4.5) +
   geom_text(data = data.frame(label = c(paste0("MPE = ", both_pce$lambda1[1]),
                                         paste0("MPE = ", both_pce$lambda1[2]),
                                         paste0("MPE = ", both_pce$lambda1[3])),
-                              comb = 1:3,
+                              comb = 1,
                               true_psi = c(0.01, 0.05, 0.1)),
-            mapping = aes(x = 0.16, y = 3.25, label = label),
-            size = 6) +
+            mapping = aes(x = 0.17, y = 1.5, label = label),
+            size = 4.5) +
   geom_text(data = data.frame(label = c(paste0("Cov = ", both_cov$lambda1[4]),
                                         paste0("Cov = ", both_cov$lambda1[5]),
                                         paste0("Cov = ", both_cov$lambda1[6])),
-                              comb = 4:6,
+                              comb = 2,
                               true_psi = c(0.01, 0.05, 0.1)),
-            mapping = aes(x = 0.16, y = 7.5, label = label),
-            size = 6) +
+            mapping = aes(x = 0.17, y = 4, label = label),
+            size = 4.5) +
   geom_text(data = data.frame(label = c(paste0("MPE = ", both_pce$lambda1[4]),
                                         paste0("MPE = ", both_pce$lambda1[5]),
                                         paste0("MPE = ", both_pce$lambda1[6])),
-                              comb = 4:6,
+                              comb = 2,
                               true_psi = c(0.01, 0.05, 0.1)),
-            mapping = aes(x = 0.16, y = 7, label = label),
-            size = 6) +
+            mapping = aes(x = 0.17, y = 3.75, label = label),
+            size = 4.5) +
   theme_bw() +
   guides(color = "none") +
   theme(axis.text.y = element_blank(),  
@@ -838,10 +863,10 @@ both_ridge_lambda1 <- ggplot(both_mean[both_mean$comb %in% 1:6, ],
         legend.title = element_text(size = 14),
         strip.text.x = element_text(size = 14))
 
-both_ridge_lambda2 <- ggplot(both_mean[both_mean$comb %in% 1:6, ], 
+both_ridge_lambda2 <- ggplot(both_mean_lambda, 
                            aes(x = lambda2, y = comb, 
-                               fill = factor(comb %in% 4:6),
-                               color = factor(comb %in% 4:6))) +
+                               fill = factor(comb == 2),
+                               color = factor(comb == 2))) +
   geom_density_ridges() +
   geom_vline(xintercept = c(0.1, 0.2), color = c("#E69F00", "#56B4E9", 
                                                  "#E69F00", "#56B4E9", 
@@ -861,31 +886,31 @@ both_ridge_lambda2 <- ggplot(both_mean[both_mean$comb %in% 1:6, ],
   geom_text(data = data.frame(label = c(paste0("Cov = ", both_cov$lambda2[1]),
                                         paste0("Cov = ", both_cov$lambda2[2]),
                                         paste0("Cov = ", both_cov$lambda2[3])),
-                              comb = 1:3,
+                              comb = 1,
                               true_psi = c(0.01, 0.05, 0.1)),
-            mapping = aes(x = 0.35, y = 3.75, label = label),
-            size = 6) +
+            mapping = aes(x = 0.33, y = 1.75, label = label),
+            size = 4.5) +
   geom_text(data = data.frame(label = c(paste0("MPE = ", both_pce$lambda2[1]),
                                         paste0("MPE = ", both_pce$lambda2[2]),
                                         paste0("MPE = ", both_pce$lambda2[3])),
-                              comb = 1:3,
+                              comb = 1,
                               true_psi = c(0.01, 0.05, 0.1)),
-            mapping = aes(x = 0.35, y = 3.25, label = label),
-            size = 6) +
+            mapping = aes(x = 0.33, y = 1.5, label = label),
+            size = 4.5) +
   geom_text(data = data.frame(label = c(paste0("Cov = ", both_cov$lambda2[4]),
                                         paste0("Cov = ", both_cov$lambda2[5]),
                                         paste0("Cov = ", both_cov$lambda2[6])),
-                              comb = 4:6,
+                              comb = 2,
                               true_psi = c(0.01, 0.05, 0.1)),
-            mapping = aes(x = 0.35, y = 7, label = label),
-            size = 6) +
+            mapping = aes(x = 0.33, y = 4, label = label),
+            size = 4.5) +
   geom_text(data = data.frame(label = c(paste0("MPE = ", both_pce$lambda2[4]),
                                         paste0("MPE = ", both_pce$lambda2[5]),
                                         paste0("MPE = ", both_pce$lambda2[6])),
-                              comb = 4:6,
+                              comb = 2,
                               true_psi = c(0.01, 0.05, 0.1)),
-            mapping = aes(x = 0.35, y = 6.5, label = label),
-            size = 6) +
+            mapping = aes(x = 0.33, y = 3.75, label = label),
+            size = 4.5) +
   theme_bw() +
   guides(color = "none") +
   theme(axis.text.y = element_blank(),  
@@ -898,15 +923,14 @@ both_ridge_lambda2 <- ggplot(both_mean[both_mean$comb %in% 1:6, ],
         legend.title = element_text(size = 14),
         strip.text.x = element_text(size = 14))
 
-both_mean_mu <- both_mean[both_mean$comb %in% c(1:3, 7:9), ]
-both_mean_mu$comb[both_mean_mu$comb == 7] <- 4
-both_mean_mu$comb[both_mean_mu$comb == 8] <- 5
-both_mean_mu$comb[both_mean_mu$comb == 9] <- 6
+both_mean_mu <- both_mean[both_mean$comb %in% c(23:25, 47:49), ]
+both_mean_mu$comb[both_mean_mu$comb %in% 23:25] <- 1
+both_mean_mu$comb[both_mean_mu$comb %in% 47:49] <- 2
 
 both_ridge_mu1 <- ggplot(both_mean_mu, 
                              aes(x = mu1, y = comb, 
-                                 fill = factor(comb %in% 4:6),
-                                 color = factor(comb %in% 4:6))) +
+                                 fill = factor(comb == 2),
+                                 color = factor(comb == 2))) +
   geom_density_ridges() +
   geom_vline(xintercept = c(0.03, 0.06), color = c("#E69F00", "#009E73", 
                                                  "#E69F00", "#009E73", 
@@ -926,31 +950,31 @@ both_ridge_mu1 <- ggplot(both_mean_mu,
   geom_text(data = data.frame(label = c(paste0("Cov = ", both_cov$mu1[1]),
                                         paste0("Cov = ", both_cov$mu1[2]),
                                         paste0("Cov = ", both_cov$mu1[3])),
-                              comb = 1:3,
+                              comb = 1,
                               true_psi = c(0.01, 0.05, 0.1)),
-            mapping = aes(x = 0.15, y = 3.75, label = label),
-            size = 6) +
+            mapping = aes(x = 0.15, y = 1.75, label = label),
+            size = 4.5) +
   geom_text(data = data.frame(label = c(paste0("MPE = ", both_pce$mu1[1]),
                                         paste0("MPE = ", both_pce$mu1[2]),
                                         paste0("MPE = ", both_pce$mu1[3])),
-                              comb = 1:3,
+                              comb = 1,
                               true_psi = c(0.01, 0.05, 0.1)),
-            mapping = aes(x = 0.15, y = 3.25, label = label),
-            size = 6) +
+            mapping = aes(x = 0.15, y = 1.5, label = label),
+            size = 4.5) +
   geom_text(data = data.frame(label = c(paste0("Cov = ", both_cov$mu1[7]),
                                         paste0("Cov = ", both_cov$mu1[8]),
                                         paste0("Cov = ", both_cov$mu1[9])),
-                              comb = 4:6,
+                              comb = 2,
                               true_psi = c(0.01, 0.05, 0.1)),
-            mapping = aes(x = 0.15, y = 7, label = label),
-            size = 6) +
+            mapping = aes(x = 0.15, y = 4, label = label),
+            size = 4.5) +
   geom_text(data = data.frame(label = c(paste0("MPE = ", both_pce$mu1[7]),
                                         paste0("MPE = ", both_pce$mu1[8]),
                                         paste0("MPE = ", both_pce$mu1[9])),
-                              comb = 4:6,
+                              comb = 2,
                               true_psi = c(0.01, 0.05, 0.1)),
-            mapping = aes(x = 0.15, y = 6.5, label = label),
-            size = 6) +
+            mapping = aes(x = 0.15, y = 3.75, label = label),
+            size = 4.5) +
   theme_bw() +
   guides(color = "none") +
   theme(axis.text.y = element_blank(),  
@@ -965,8 +989,8 @@ both_ridge_mu1 <- ggplot(both_mean_mu,
 
 both_ridge_mu2 <- ggplot(both_mean_mu, 
                              aes(x = mu2, y = comb, 
-                                 fill = factor(comb %in% 4:6),
-                                 color = factor(comb %in% 4:6))) +
+                                 fill = factor(comb == 2),
+                                 color = factor(comb == 2))) +
   geom_density_ridges() +
   geom_vline(xintercept = 0.03, color = "black", lwd = 1) +
   scale_fill_manual(name = "Scenario",
@@ -983,31 +1007,31 @@ both_ridge_mu2 <- ggplot(both_mean_mu,
   geom_text(data = data.frame(label = c(paste0("Cov = ", both_cov$mu2[1]),
                                         paste0("Cov = ", both_cov$mu2[2]),
                                         paste0("Cov = ", both_cov$mu2[3])),
-                              comb = 1:3,
+                              comb = 1,
                               true_psi = c(0.01, 0.05, 0.1)),
-            mapping = aes(x = 0.14, y = 3.75, label = label),
-            size = 6) +
+            mapping = aes(x = 0.14, y = 1.75, label = label),
+            size = 4.5) +
   geom_text(data = data.frame(label = c(paste0("MPE = ", both_pce$mu2[1]),
                                         paste0("MPE = ", both_pce$mu2[2]),
                                         paste0("MPE = ", both_pce$mu2[3])),
-                              comb = 1:3,
+                              comb = 1,
                               true_psi = c(0.01, 0.05, 0.1)),
-            mapping = aes(x = 0.14, y = 3.25, label = label),
-            size = 6) +
+            mapping = aes(x = 0.14, y = 1.5, label = label),
+            size = 4.5) +
   geom_text(data = data.frame(label = c(paste0("Cov = ", both_cov$mu2[7]),
                                         paste0("Cov = ", both_cov$mu2[8]),
                                         paste0("Cov = ", both_cov$mu2[9])),
-                              comb = 4:6,
+                              comb = 2,
                               true_psi = c(0.01, 0.05, 0.1)),
-            mapping = aes(x = 0.14, y = 7, label = label),
-            size = 6) +
+            mapping = aes(x = 0.14, y = 4, label = label),
+            size = 4.5) +
   geom_text(data = data.frame(label = c(paste0("MPE = ", both_pce$mu2[7]),
                                         paste0("MPE = ", both_pce$mu2[8]),
                                         paste0("MPE = ", both_pce$mu2[9])),
-                              comb = 4:6,
+                              comb = 2,
                               true_psi = c(0.01, 0.05, 0.1)),
-            mapping = aes(x = 0.14, y = 6.5, label = label),
-            size = 6) +
+            mapping = aes(x = 0.14, y = 3.75, label = label),
+            size = 4.5) +
   theme_bw() +
   guides(color = "none") +
   theme(axis.text.y = element_blank(),  
@@ -1020,15 +1044,14 @@ both_ridge_mu2 <- ggplot(both_mean_mu,
         legend.title = element_text(size = 14),
         strip.text.x = element_text(size = 14))
 
-both_mean_q <- both_mean[both_mean$comb %in% c(1:3, 10:12), ]
-both_mean_q$comb[both_mean_q$comb == 10] <- 4
-both_mean_q$comb[both_mean_q$comb == 11] <- 5
-both_mean_q$comb[both_mean_q$comb == 12] <- 6
+both_mean_q <- both_mean[both_mean$comb %in% c(23:25, 59:61), ]
+both_mean_q$comb[both_mean_q$comb %in% 23:25] <- 1
+both_mean_q$comb[both_mean_q$comb %in% 59:61] <- 2
 
 both_ridge_q01 <- ggplot(both_mean_q, 
                              aes(x = q01, y = comb, 
-                                 fill = factor(comb %in% 4:6),
-                                 color = factor(comb %in% 4:6))) +
+                                 fill = factor(comb == 2),
+                                 color = factor(comb == 2))) +
   geom_density_ridges() +
   geom_vline(xintercept = 0.01, color = "black", lwd = 1) +
   scale_fill_manual(name = "Scenario",
@@ -1045,31 +1068,31 @@ both_ridge_q01 <- ggplot(both_mean_q,
   geom_text(data = data.frame(label = c(paste0("Cov = ", both_cov$q01[1]),
                                         paste0("Cov = ", both_cov$q01[2]),
                                         paste0("Cov = ", both_cov$q01[3])),
-                              comb = 1:3,
+                              comb = 1,
                               true_psi = c(0.01, 0.05, 0.1)),
-            mapping = aes(x = 0.025, y = 3.75, label = label),
-            size = 6) +
+            mapping = aes(x = 0.025, y = 1.75, label = label),
+            size = 4.5) +
   geom_text(data = data.frame(label = c(paste0("MPE = ", both_pce$q01[1]),
                                         paste0("MPE = ", both_pce$q01[2]),
                                         paste0("MPE = ", both_pce$q01[3])),
-                              comb = 1:3,
+                              comb = 1,
                               true_psi = c(0.01, 0.05, 0.1)),
-            mapping = aes(x = 0.025, y = 3.25, label = label),
-            size = 6) +
+            mapping = aes(x = 0.025, y = 1.5, label = label),
+            size = 4.5) +
   geom_text(data = data.frame(label = c(paste0("Cov = ", both_cov$q01[10]),
                                         paste0("Cov = ", both_cov$q01[11]),
                                         paste0("Cov = ", both_cov$q01[12])),
-                              comb = 4:6,
+                              comb = 2,
                               true_psi = c(0.01, 0.05, 0.1)),
-            mapping = aes(x = 0.025, y = 7, label = label),
-            size = 6) +
+            mapping = aes(x = 0.025, y = 4, label = label),
+            size = 4.5) +
   geom_text(data = data.frame(label = c(paste0("MPE = ", both_pce$q01[10]),
                                         paste0("MPE = ", both_pce$q01[11]),
                                         paste0("MPE = ", both_pce$q01[12])),
-                              comb = 4:6,
+                              comb = 2,
                               true_psi = c(0.01, 0.05, 0.1)),
-            mapping = aes(x = 0.025, y = 6.5, label = label),
-            size = 6) +
+            mapping = aes(x = 0.025, y = 3.75, label = label),
+            size = 4.5) +
   theme_bw() +
   guides(color = "none") +
   theme(axis.text.y = element_blank(),  
@@ -1084,8 +1107,8 @@ both_ridge_q01 <- ggplot(both_mean_q,
 
 both_ridge_q10 <- ggplot(both_mean_q, 
                              aes(x = q10, y = comb, 
-                                 fill = factor(comb %in% 4:6),
-                                 color = factor(comb %in% 4:6))) +
+                                 fill = factor(comb == 2),
+                                 color = factor(comb == 2))) +
   geom_density_ridges() +
   geom_vline(xintercept = c(0.01, 0.005), color = c("#E69F00", "#CC79A7", 
                                                  "#E69F00", "#CC79A7", 
@@ -1105,31 +1128,31 @@ both_ridge_q10 <- ggplot(both_mean_q,
   geom_text(data = data.frame(label = c(paste0("Cov = ", both_cov$q10[1]),
                                         paste0("Cov = ", both_cov$q10[2]),
                                         paste0("Cov = ", both_cov$q10[3])),
-                              comb = 1:3,
+                              comb = 1,
                               true_psi = c(0.01, 0.05, 0.1)),
-            mapping = aes(x = 0.025, y = 3.75, label = label),
-            size = 6) +
+            mapping = aes(x = 0.025, y = 1.75, label = label),
+            size = 4.5) +
   geom_text(data = data.frame(label = c(paste0("MPE = ", both_pce$q10[1]),
                                         paste0("MPE = ", both_pce$q10[2]),
                                         paste0("MPE = ", both_pce$q10[3])),
-                              comb = 1:3,
+                              comb = 1,
                               true_psi = c(0.01, 0.05, 0.1)),
-            mapping = aes(x = 0.025, y = 3.25, label = label),
-            size = 6) +
+            mapping = aes(x = 0.025, y = 1.5, label = label),
+            size = 4.5) +
   geom_text(data = data.frame(label = c(paste0("Cov = ", both_cov$q10[10]),
                                         paste0("Cov = ", both_cov$q10[11]),
                                         paste0("Cov = ", both_cov$q10[12])),
-                              comb = 4:6,
+                              comb = 2,
                               true_psi = c(0.01, 0.05, 0.1)),
-            mapping = aes(x = 0.025, y = 7, label = label),
-            size = 6) +
+            mapping = aes(x = 0.025, y = 4, label = label),
+            size = 4.5) +
   geom_text(data = data.frame(label = c(paste0("MPE = ", both_pce$q10[10]),
                                         paste0("MPE = ", both_pce$q10[11]),
                                         paste0("MPE = ", both_pce$q10[12])),
-                              comb = 4:6,
+                              comb = 2,
                               true_psi = c(0.01, 0.05, 0.1)),
-            mapping = aes(x = 0.025, y = 6.5, label = label),
-            size = 6) +
+            mapping = aes(x = 0.025, y = 3.75, label = label),
+            size = 4.5) +
   theme_bw() +
   guides(color = "none") +
   theme(axis.text.y = element_blank(),  
@@ -1276,7 +1299,7 @@ fp_bisse_mode$traitComb <- unlist(lapply(1:nrow(fp_bisse_mode),
           fp_bisse_refs$traitComb[fp_bisse_refs$comb == fp_bisse_mode$comb[x]]))
 
 # make a labeller for facet_grid
-trait_labs <- c("Real trait", "q = 0.01", "q = 0.1", "q = 1")
+trait_labs <- c("Effect trait", "q = 0.01", "q = 0.1", "q = 1")
 names(trait_labs) <- 1:4
 par_labs <- c("q = 0.01", "No shifts")
 names(par_labs) <- 2:1
@@ -1395,7 +1418,7 @@ fp_both_mode_lambda$psiComb <- unlist(lapply(1:nrow(fp_both_mode_lambda),
         fp_both_refs$psiComb[fp_both_refs$comb == fp_both_mode_lambda$comb[x]]))
 
 # make a labeller for facet_grid
-trait_labs <- c("Real trait", "q = 0.01", "q = 0.1", "q = 1")
+trait_labs <- c("Effect trait", "q = 0.01", "q = 0.1", "q = 1")
 names(trait_labs) <- 1:4
 par_labs <- c("q = 0.01", "No shifts")
 names(par_labs) <- 2:1
@@ -1415,7 +1438,8 @@ labs(title = expression("Posterior probability of "*lambda['1']*" > "*lambda['0'
      x = "Posterior probability", 
      y = "Proportion of simulations") +
 theme_bw() +
-theme(title = element_text(size = 16),
+theme(legend.position = "none",
+      title = element_text(size = 16),
       axis.text = element_text(size = 12),
       axis.title = element_text(size = 14),
       legend.text = element_text(size = 12),
@@ -1426,8 +1450,10 @@ theme(title = element_text(size = 16),
 fp_both_lambda_mid <- 
   ggplot(fp_both_mode_lambda[fp_both_mode_lambda$psiComb == 2, ], 
          aes(lambda_post_prob)) +
-  geom_histogram(aes(y = stat(count / sum(count))), binwidth = 0.1, 
-                 fill = "#56B4E9", color = "#0072B2") +
+  geom_histogram(aes(y = stat(count / sum(count)), 
+                     fill = parComb, color = parComb), binwidth = 0.1) +
+  scale_fill_manual(values = c("#56B4E9", "#E69F00")) +
+  scale_color_manual(values = c("#0072B2", "#D55E00")) +
   facet_grid(parComb ~ traitComb, 
              labeller = labeller(parComb = par_labs, 
                                  traitComb = trait_labs)) + 
@@ -1435,7 +1461,8 @@ fp_both_lambda_mid <-
        x = "Posterior probability", 
        y = "Proportion of simulations") +
   theme_bw() +
-  theme(title = element_text(size = 16),
+  theme(legend.position = "none",
+        title = element_text(size = 16),
         axis.text = element_text(size = 12),
         axis.title = element_text(size = 14),
         legend.text = element_text(size = 12),
@@ -1446,8 +1473,10 @@ fp_both_lambda_mid <-
 fp_both_lambda_high <- 
   ggplot(fp_both_mode_lambda[fp_both_mode_lambda$psiComb == 3, ], 
          aes(lambda_post_prob)) +
-  geom_histogram(aes(y = stat(count / sum(count))), binwidth = 0.1, 
-                 fill = "#56B4E9", color = "#0072B2") +
+  geom_histogram(aes(y = stat(count / sum(count)), 
+                     fill = parComb, color = parComb), binwidth = 0.1) +
+  scale_fill_manual(values = c("#56B4E9", "#E69F00")) +
+  scale_color_manual(values = c("#0072B2", "#D55E00")) +
   facet_grid(parComb ~ traitComb, 
              labeller = labeller(parComb = par_labs, 
                                  traitComb = trait_labs)) + 
@@ -1455,7 +1484,8 @@ fp_both_lambda_high <-
        x = "Posterior probability", 
        y = "Proportion of simulations") +
   theme_bw() +
-  theme(title = element_text(size = 16),
+  theme(legend.position = "none",
+        title = element_text(size = 16),
         axis.text = element_text(size = 12),
         axis.title = element_text(size = 14),
         legend.text = element_text(size = 12),
@@ -1479,7 +1509,7 @@ fp_both_mode_mu$psiComb <- unlist(lapply(1:nrow(fp_both_mode_mu),
                                                fp_both_refs$psiComb[fp_both_refs$comb == fp_both_mode_mu$comb[x]]))
 
 # make a labeller for facet_grid
-trait_labs <- c("Real trait", "q = 0.01", "q = 0.1", "q = 1")
+trait_labs <- c("Effect trait", "q = 0.01", "q = 0.1", "q = 1")
 names(trait_labs) <- 1:4
 par_labs <- c("q = 0.01", "No shifts")
 names(par_labs) <- 2:1
@@ -1488,8 +1518,10 @@ names(par_labs) <- 2:1
 fp_both_mu_low <- 
   ggplot(fp_both_mode_mu[fp_both_mode_mu$psiComb == 1, ], 
          aes(mu_post_prob)) +
-  geom_histogram(aes(y = stat(count / sum(count))), binwidth = 0.1, 
-                 fill = "#56B4E9", color = "#0072B2") +
+  geom_histogram(aes(y = stat(count / sum(count)), 
+                     fill = parComb, color = parComb), binwidth = 0.1) +
+  scale_fill_manual(values = c("#009E73", "#56B4E9")) +
+  scale_color_manual(values = c("black", "#0072B2")) +
   facet_grid(parComb ~ traitComb, 
              labeller = labeller(parComb = par_labs, 
                                  traitComb = trait_labs)) + 
@@ -1497,7 +1529,8 @@ fp_both_mu_low <-
        x = "Posterior probability", 
        y = "Proportion of simulations") +
   theme_bw() +
-  theme(title = element_text(size = 16),
+  theme(legend.position = "none",
+        title = element_text(size = 16),
         axis.text = element_text(size = 12),
         axis.title = element_text(size = 14),
         legend.text = element_text(size = 12),
@@ -1508,8 +1541,10 @@ fp_both_mu_low <-
 fp_both_mu_mid <- 
   ggplot(fp_both_mode_mu[fp_both_mode_mu$psiComb == 2, ], 
          aes(mu_post_prob)) +
-  geom_histogram(aes(y = stat(count / sum(count))), binwidth = 0.1, 
-                 fill = "#56B4E9", color = "#0072B2") +
+  geom_histogram(aes(y = stat(count / sum(count)), 
+                     fill = parComb, color = parComb), binwidth = 0.1) +
+  scale_fill_manual(values = c("#009E73", "#56B4E9")) +
+  scale_color_manual(values = c("black", "#0072B2")) +
   facet_grid(parComb ~ traitComb, 
              labeller = labeller(parComb = par_labs, 
                                  traitComb = trait_labs)) + 
@@ -1517,7 +1552,8 @@ fp_both_mu_mid <-
        x = "Posterior probability", 
        y = "Proportion of simulations") +
   theme_bw() +
-  theme(title = element_text(size = 16),
+  theme(legend.position = "none",
+        title = element_text(size = 16),
         axis.text = element_text(size = 12),
         axis.title = element_text(size = 14),
         legend.text = element_text(size = 12),
@@ -1528,8 +1564,10 @@ fp_both_mu_mid <-
 fp_both_mu_high <- 
   ggplot(fp_both_mode_mu[fp_both_mode_mu$psiComb == 3, ], 
          aes(mu_post_prob)) +
-  geom_histogram(aes(y = stat(count / sum(count))), binwidth = 0.1, 
-                 fill = "#56B4E9", color = "#0072B2") +
+  geom_histogram(aes(y = stat(count / sum(count)), 
+                     fill = parComb, color = parComb), binwidth = 0.1) +
+  scale_fill_manual(values = c("#009E73", "#56B4E9")) +
+  scale_color_manual(values = c("black", "#0072B2")) +
   facet_grid(parComb ~ traitComb, 
              labeller = labeller(parComb = par_labs, 
                                  traitComb = trait_labs)) + 
@@ -1537,7 +1575,8 @@ fp_both_mu_high <-
        x = "Posterior probability", 
        y = "Proportion of simulations") +
   theme_bw() +
-  theme(title = element_text(size = 16),
+  theme(legend.position = "none",
+        title = element_text(size = 16),
         axis.text = element_text(size = 12),
         axis.title = element_text(size = 14),
         legend.text = element_text(size = 12),
