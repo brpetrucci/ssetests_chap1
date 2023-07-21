@@ -135,6 +135,45 @@ for (i in 2:nrow(key)) {
 ###
 # auxiliary functions
 
+# correcting root edge after dropping some tips
+correct_root_edge <- function(phy, sim, fossils) {
+  if (max(node.depth.edgelength(phy)) + phy$root.edge != max(sim$TS)) {
+    # if the MRCA is a speciation event
+    if (max(node.depth.edgelength(phy)) %in% sim$TS) {
+      # get species that was born
+      spBorn <- which(sim$TS == max(node.depth.edgelength(phy)))
+      
+      # get its parent
+      spPar <- sim$PAR[spBorn]
+      
+      # get fossils for parent species
+      fossilsSpPar <- fossils[fossils$Species == paste0("t", spPar), ]
+      
+      # check if spPar has any fossils older than spBorn
+      if (nrow(fossilsSpPar) > 0 && 
+          any(fossilsSpPar$SampT > sim$TS[spBorn])) {
+        # root edge will be the difference between 
+        # the speciation time and oldest fossil
+        phy$root.edge <- sim$TS[spPar] - max(fossilsSpPar$SampT)
+      } else {
+        # if not, root edge is just the time between speciations
+        phy$root.edge <- sim$TS[spPar] - sim$TS[spBorn]
+      }
+    } else {
+      # if not, it is a fossil, find which species'
+      spFossil <- fossils$Species[which(fossils$SampT == 
+                                          max(node.depth.edgelength(phy)))]
+      spFossil <- as.numeric(gsub('.([0-9]+)*','\\1', spFossil))
+      
+      # root edge then is the difference between speciation and fossilization
+      phy$root.edge <- sim$TS[spFossil] - 
+        max(node.depth.edgelength(phy))
+    }
+  }
+  
+  return(phy)
+}
+
 # create simulation function for one rep
 simulate_rep <- function(lambda0, lambda1, lambda2, lambda3,
                          mu0, mu1, mu2, mu3, 
@@ -203,7 +242,13 @@ simulate_rep <- function(lambda0, lambda1, lambda2, lambda3,
     
     # get an FBD tree
     treeFBD <- make.phylo(sim, sample, 
-                            saFormat = "node", returnTrueExt = FALSE)
+                          saFormat = "node", returnTrueExt = FALSE)
+    
+    # correct root edge if necessary
+    treeFBD <- correct_root_edge(treeFBD, sim, sample)
+    
+    # get origin
+    originFBD <- max(node.depth.edgelength(treeFBD)) + treeFBD$root.edge
     
     # make the trait lists
     # for the ultrametric tree
@@ -230,8 +275,9 @@ simulate_rep <- function(lambda0, lambda1, lambda2, lambda3,
     treeFBDNeutralHigh <- traitsSummaryUltra$trait4
     
     # check the minimum percentage of the rare trait
-    ratioTrait <- min(sum(treeUltraReal)/length(ultraTaxa),
-                      sum(treeFBDReal)/length(fbdTaxa))
+    ratioTrait <- min(sum(treeUltraReal)/sum(sim$EXTANT),
+                      sum(treeFBDReal)/(length(sim$TS) + 
+                                          nrow(sample) - sum(!sim$EXTANT)))
     
     # check that both traits are represented at least 10%
     bounds <- (ratioTrait >= 0.1) &&
@@ -250,6 +296,7 @@ simulate_rep <- function(lambda0, lambda1, lambda2, lambda3,
   # make a list to return
   res <- list(SIM = sim, SAMPLE = sample,
               TREE = tree, ULTRATREE = treeUltra, FBDTREE = treeFBD,
+              ORIGIN = originFBD,
               REALULTRA = treeUltraReal, REALFBD = treeFBDReal,
               NEUTRALLOWULTRA = treeUltraNeutralLow, 
               NEUTRALLOWFBD = treeFBDNeutralLow,
@@ -283,6 +330,9 @@ save_sims <- function(nReps, simReps, targetDir) {
   treeList <-  lapply(1:nReps, function(x) simReps[[x]]$TREE)
   treeUltraList <- lapply(1:nReps, function(x) simReps[[x]]$ULTRATREE)
   treeFBDList <- lapply(1:nReps, function(x) simReps[[x]]$FBDTREE)
+  
+  # origin times
+  origin <- lapply(1:nReps, function(x) simReps[[x]]$ORIGIN)
   
   # save simulation RData
   save(simList, file = paste0(targetDir, "sim_list.RData"))
@@ -404,6 +454,11 @@ save_sims <- function(nReps, simReps, targetDir) {
   invisible(lapply(1:nReps, function(x)
     write.nexus(treeFBDList[[x]], 
                 file = paste0(treeFBDDir, "tree_fbd_", x, ".nex"))))
+  # write origins to FBD directory
+  invisible(write.table(origin, quote = FALSE, 
+                        col.names = FALSE, row.names = FALSE,
+                        file = paste0(treeFBDDir, "origins_fbd.tsv"),
+                        sep = "\t"))
   
   # save complete trees as well
   invisible(lapply(1:nReps, function(x)
