@@ -114,7 +114,7 @@ monitors.append(mnScreen(printgen = 1000))
 mymcmc = mcmc(mymodel, monitors, moves)
 
 # run mcmc
-mymcmc.run(generations = 100000, tuningInterval = 200, checkpointInterval = 1000, checkpointFile = out_name + "/checkpoint/hisse" + rep + ".state")
+mymcmc.run(generations = 10000, tuningInterval = 200, checkpointInterval = 1000, checkpointFile = out_name + "/checkpoint/hisse" + rep + ".state")
 
 # quit
 q()

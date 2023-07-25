@@ -241,8 +241,7 @@ simulate_rep <- function(lambda0, lambda1, lambda2, lambda3,
     treeUltra <- drop.fossil(tree)
     
     # get an FBD tree
-    treeFBD <- make.phylo(sim, sample, 
-                          saFormat = "node", returnTrueExt = FALSE)
+    treeFBD <- make.phylo(sim, sample, returnTrueExt = FALSE)
     
     # correct root edge if necessary
     treeFBD <- correct_root_edge(treeFBD, sim, sample)
