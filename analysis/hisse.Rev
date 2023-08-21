@@ -41,12 +41,12 @@ monitors = VectorMonitors()
 # set a separate variable for each observed and hidden speciation and extinction rate
 for (i in 1:num_rates) {
   # set loguniform priors for each of the observed rates
-  lambda[i] ~ dnLoguniform(1E-6, 1E2)
-  mu[i] ~ dnLoguniform(1E-6, 1E2)
+  lambda[i] ~ dnExp(10) 
+  mu[i] ~ dnExp(10)
 
   # set value so it doesn't get stuck
-  lambda[i].setValue(1)
-  mu[i].setValue(1)
+  lambda[i].setValue(0.1)
+  mu[i].setValue(0.1)
 
   # append moves 
   moves.append(mvScale(lambda[i], weight = 3.0))
@@ -63,8 +63,8 @@ for (i in 1:num_states*(num_states - 1)) {
   q_hidden[i] ~ dnExp(rate_pr)
 
   # set values so it doesn't get stuck
-  q_obs[i].setValue(1)
-  q_hidden[i].setValue(1)
+  q_obs[i].setValue(0.01)
+  q_hidden[i].setValue(0.01)
 
   # append moves 
   moves.append(mvScale(q_obs[i], weight = 3.0))

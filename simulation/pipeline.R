@@ -174,6 +174,61 @@ correct_root_edge <- function(phy, sim, fossils) {
   return(phy)
 }
 
+# hide hidden traits
+hide_traits <- function(traits, nStates = 2, nHidden = 2) {
+  # for each species
+  for (sp in 1:length(traits)) {
+    # iterate through number of traits
+    for (tr in 1:length(traits[[sp]])) {
+      # get traits data frame
+      traitsSp <- traits[[sp]][[tr]]
+      
+      # set them to normal states
+      traitsSp$value <- traitsSp$value %% nStates
+      
+      if (nrow(traitsSp) > 1) {
+        # duplicate rows
+        dup <- c()
+        
+        # counting how many duplicates in a row
+        count <- 0
+        
+        #iterate through rows to make sure there are no duplicates
+        for (i in 2:nrow(traitsSp)) {
+          if (traitsSp$value[i] == traitsSp$value[i - 1]) {
+            # add to dup
+            dup <- c(dup, i)
+            
+            # increase count of dups
+            count <- count + 1
+          } else {
+            # if count > 0, change the max of count rows ago to max of last row
+            if (count > 0) {
+              traitsSp$min[i - 1 - count] <- traitsSp$min[i - 1]
+              
+              # return count to 0
+              count <- 0
+            }
+          }
+        }
+        
+        # need to do a last check in case the last row is a duplicate
+        if (count > 0) {
+          traitsSp$min[i - count] <- traitsSp$min[i]
+        }
+        
+        # delete duplicates
+        if (!is.null(dup)) traitsSp <- traitsSp[-dup, ]
+      }
+      
+      # reassign traits data frame
+      traits[[sp]][[tr]] <- traitsSp
+    }
+  }
+  
+  return(traits)
+}
+
 # create simulation function for one rep
 simulate_rep <- function(lambda0, lambda1, lambda2, lambda3,
                          mu0, mu1, mu2, mu3, 
@@ -210,12 +265,12 @@ simulate_rep <- function(lambda0, lambda1, lambda2, lambda3,
   while (!bounds) {
     # run simulation
     sim <- bd.sim.traits(n0, lambda, mu, N = N, 
-                         nTraits = 4, nStates = 2, nHidden = 2, Q = Q)
+                         nTraits = 4, nStates = 4, Q = Q)
     
     # run again until we have some extinct species
     while (sum(!sim$SIM$EXTANT) == 0) {
       sim <- bd.sim.traits(n0, lambda, mu, N = N, 
-                           nTraits = 4, nStates = 2, nHidden = 2, Q = Q)
+                           nTraits = 4, nStates = 4, Q = Q)
       
     }
     
@@ -225,6 +280,15 @@ simulate_rep <- function(lambda0, lambda1, lambda2, lambda3,
     # and get the sim object
     sim <- sim$SIM
     
+    # get extant trait summary for real trait
+    realSummary <- traits.summary(sim, traits, selection = "extant")$trait1
+    
+    # check ratio of traits
+    ratioExtant <- table(realSummary) / length(realSummary)
+    
+    # hide traits
+    traits <- hide_traits(traits)
+    
     # get tMax
     tMax <- max(sim$TS)
     
@@ -233,7 +297,7 @@ simulate_rep <- function(lambda0, lambda1, lambda2, lambda3,
     while (nrow(sample) == 0) {
       sample <- suppressMessages(sample.clade(sim, psi, max(sim$TS)))
     }
-    
+
     # get complete tree
     tree <- make.phylo(sim)
     
@@ -280,13 +344,14 @@ simulate_rep <- function(lambda0, lambda1, lambda2, lambda3,
     
     # check that both traits are represented at least 10%
     bounds <- (ratioTrait >= 0.1) &&
-      (ratioTrait <= 0.9)
+      (ratioTrait <= 0.9) && (all(ratioExtant >= 0.10)) &&
+      (all(ratioExtant <= 0.90))
     
     # increase counter
     counter <- counter + 1
     
     # if counter is higher than 10, maybe rethink the parameters
-    if (counter > 10) {
+    if (counter > 100) {
       print(ratioTrait)
       stop("Hard to find replicate within bounds")
     }
