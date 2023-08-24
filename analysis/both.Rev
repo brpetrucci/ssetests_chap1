@@ -110,6 +110,9 @@ monitors.append(mnModel(filename = out_name + "hisse.log", printgen = 100))
 # and to screen
 monitors.append(mnScreen(printgen = 1000))
 
+# stochastic mapping
+monitors.append(mnStochasticCharacterMap(glhbdsp = timetree, filename = out_name + "hisse_stmap.log", printgen = 500))
+
 # creates mcmc object
 mymcmc = mcmc(mymodel, monitors, moves)
 
