@@ -23,5 +23,10 @@ echo $rep >> aux/aux_${1}_$rep.Rev
 # source it, the parameter combination, and the actual script
 timeout 121h rb aux/aux_${1}_$rep.Rev analysis/refs/refs_${1}.Rev analysis/master.Rev
 
+# timeout and requeue if it takes more than 24h, MCMC is probably stuck
+if [[ $? == 124 ]]; then
+  scontrol requeue ${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}
+fi
+
 # remove file
 rm aux/aux_${1}_$rep.Rev

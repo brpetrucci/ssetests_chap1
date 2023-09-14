@@ -331,11 +331,11 @@ simulate_rep <- function(lambda0, lambda1, lambda2, lambda3,
     
     treeFBDReal <- traitsSummaryFBD$trait1
     
-    treeFBDNeutralLow <- traitsSummaryUltra$trait2
+    treeFBDNeutralLow <- traitsSummaryFBD$trait2
     
-    treeFBDNeutralMid <- traitsSummaryUltra$trait3
+    treeFBDNeutralMid <- traitsSummaryFBD$trait3
     
-    treeFBDNeutralHigh <- traitsSummaryUltra$trait4
+    treeFBDNeutralHigh <- traitsSummaryFBD$trait4
     
     # check the minimum percentage of the rare trait
     ratioTrait <- min(sum(treeUltraReal)/sum(sim$EXTANT),
