@@ -1,8 +1,8 @@
 # load modules
-module load boost/1.80.0-rnozcm7 
-module load cmake/3.25.1-bc3eqck
-module load autoconf/2.69-aorr3ao
-module load automake/1.16.5-rpnnj5a
+module load boost/1.81.0-m2umk6c
+module load cmake/3.26.2-gbzqcn2
+module load autoconf/2.69-cd4mshe
+module load automake/1.16.5-omfl6zl
 
 # add rb to the path
 export PATH=$PATH:/work/LAS/phylo-lab/petrucci/revbayes/projects/cmake
