@@ -2,7 +2,7 @@
 
 #SBATCH --nodes=1 # 1 node per job
 #SBATCH --time=01:00:00 # just an hour--calling the array itself doesn't take long 
-#SBATCH --array=1-49 # 114 parameter combinations, 50 at a time
+#SBATCH --array=50-69 # 114 parameter combinations, 50 at a time
 
 #SBATCH --output=output/jobs/array/job_%A_%a.out
 #SBATCH --error=output/jobs/array/job_%A_%a.err
